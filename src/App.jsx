@@ -7,7 +7,7 @@ import { useSmoothScroll, attachRailSnap, onFrame, clamp, sceneStyle, trackProgr
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-const EMAILJS_TO = 'brylev@nfckey.tech'
+const EMAILJS_TO = 'brylev15@yandex.ru'
 
 const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
 
