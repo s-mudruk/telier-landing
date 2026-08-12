@@ -9,6 +9,8 @@ const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 const EMAILJS_TO = 'artem_ermakov_1999@mail.ru'
 
+const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+
 const PHONE = '+7 495 975-97-90'
 const PHONE_LABEL = '+7 (495) 975-97-90'
 
@@ -59,22 +61,22 @@ const SCENES = [
   {
     title: 'Единый вход',
     desc: 'Гость регистрируется один раз, и все сервисы отеля уже внутри.',
-    img: '/assets/mock-onboarding.png',
+    img: asset('/assets/mock-onboarding.png'),
   },
   {
     title: 'Точный заказ в пару касаний',
     desc: 'Еда, спа и уборка со счётом на номер, без карты и ожидания.',
-    img: '/assets/mock-massage.png',
+    img: asset('/assets/mock-massage.png'),
   },
   {
     title: 'Персональный чат 24/7',
     desc: 'Любой вопрос решается в переписке, ресепшн разгружен.',
-    img: '/assets/mock-chat.png',
+    img: asset('/assets/mock-chat.png'),
   },
   {
     title: 'Говорит на языке гостя',
     desc: 'Интерфейс настраивается под нужный язык.',
-    img: '/assets/mock-language.png',
+    img: asset('/assets/mock-language.png'),
   },
 ]
 
@@ -323,12 +325,12 @@ function Hero({ heroRef, phoneFormRef, onDemoClick }) {
     <section ref={heroRef} className="panel hero">
       <div className="container hero-grid">
         <div className="hero-copy">
-          <img className="hero-logo" src="/assets/logo.svg" alt="Тельер" />
+          <img className="hero-logo" src={asset('/assets/logo.svg')} alt="Тельер" />
           <h1>Все услуги отеля в одном приложении</h1>
           <ActionTicker />
         </div>
       </div>
-      <img className="hero-hand" src="/assets/hero-hand.png" alt="Приложение Тельер в руке гостя" />
+      <img className="hero-hand" src={asset('/assets/hero-hand.png')} alt="Приложение Тельер в руке гостя" />
       <div className="hero-lead">
         <PhoneForm ref={phoneFormRef} cta="Заказать демо" onCtaClick={onDemoClick} />
       </div>
@@ -548,7 +550,7 @@ function Footer({ footerRef, onDemoClick }) {
             </div>
 
             <div className="footer-brand">
-              <img src="/assets/mark.svg" alt="" className="footer-mark" />
+              <img src={asset('/assets/mark.svg')} alt="" className="footer-mark" />
               <p>
                 © {new Date().getFullYear()} ООО «Тельер».
                 <br />
@@ -560,7 +562,7 @@ function Footer({ footerRef, onDemoClick }) {
       </div>
 
       {/* слой `mv grd` из макета, 1440×306 под плашкой */}
-      <img className="footer-wave" src="/assets/footer-wave.png" alt="" aria-hidden="true" />
+      <img className="footer-wave" src={asset('/assets/footer-wave.png')} alt="" aria-hidden="true" />
     </section>
   )
 }
@@ -595,7 +597,7 @@ export default function App() {
     <>
       <header className={`header ${footerSeen ? 'hidden' : ''}`}>
         <div className="container header-row">
-          <img className={`logo header-fly ${chromeShown ? 'show' : ''}`} src="/assets/logo.svg" alt="Тельер" />
+          <img className={`logo header-fly ${chromeShown ? 'show' : ''}`} src={asset('/assets/logo.svg')} alt="Тельер" />
           <Cta
             className={`header-start header-fly ${chromeShown ? 'show' : ''}`}
             tabIndex={chromeShown ? 0 : -1}
