@@ -7,7 +7,7 @@
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173/telier-landing/
 npm run build    # сборка в dist/
 npm run preview  # посмотреть собранное
 ```
@@ -49,7 +49,10 @@ Secrets в environment **DEPLOY** (Settings → Environments):
 
 Сайт: `https://s-mudruk.github.io/telier-landing/`
 
-В EmailJS dashboard добавьте этот URL в Allowed origins.
+`base` задаётся через `VITE_BASE` при сборке (по умолчанию `/telier-landing/`).
+Для `telier.ru` в корне добавьте в environment **DEPLOY** secret `VITE_BASE` со значением `/`.
+
+В EmailJS dashboard добавьте URL сайта в Allowed origins.
 
 ## Из чего состоит
 
