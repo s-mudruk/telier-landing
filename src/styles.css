@@ -1,0 +1,721 @@
+/* ============ Токены Тельер ============ */
+:root {
+  --bg-canvas: #f5f4f2;
+  --bg-card: #ffffff;
+  --bg-media: #ece9e4;
+  --ink: #131313;
+  --ink-muted: rgba(19, 19, 19, 0.35);
+  --ink-soft: rgba(19, 19, 19, 0.55);
+  --ink-2: #595959;
+  --ink-3: #737373;
+  --ink-4: #808080;
+  --accent: #fca956;
+  --accent-soft: #ffe9cf;
+  --hairline: #e4e4e4;
+
+  --radius-card: 20px;
+  --radius-sheet: 32px;
+  --radius-full: 999px;
+
+  --font-display: 'Nata Sans', system-ui, sans-serif;
+  --font-body: 'Noto Sans', system-ui, sans-serif;
+
+  --shadow-card: 0 2px 8px rgba(19, 19, 19, 0.05), 0 12px 32px rgba(19, 19, 19, 0.07);
+  --shadow-float: 0 8px 24px rgba(19, 19, 19, 0.1), 0 24px 64px rgba(19, 19, 19, 0.12);
+
+  --container: 1160px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { overflow-x: hidden; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.only-mob { display: none; }
+
+/* ============ Скролл ============ */
+/* Скроллит документ, инерция на Lenis. CSS-снап не возвращать: рывки. */
+.snap { position: relative; }
+
+/* Рекомендованный Lenis сброс */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+.panel {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ============ Хэдер: перетекание из hero ============ */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  padding: 20px 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.header.hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+
+.header-row { display: flex; align-items: center; justify-content: space-between; }
+
+.logo { height: 34px; width: auto; }
+
+.header-fly {
+  opacity: 0;
+  transform: translateY(26px) scale(0.8);
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-fly.show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Кнопка одного размера всегда: отклик это фон и сжатие на нажатие */
+.btn-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  background-color: var(--ink);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  padding: 15px 22px;
+  transition: background-color 0.2s ease, transform 0.12s ease;
+}
+
+.btn-start:hover { background-color: #2b2b2b; }
+
+.btn-start:active { transform: scale(0.97); background-color: var(--ink); }
+
+/* ============ 01 Hero ============ */
+.hero { justify-content: center; }
+
+.hero-grid { position: relative; z-index: 2; }
+
+/* 600 из макета: перенос заголовка без наезда на руку */
+.hero-copy { max-width: 600px; }
+
+.hero-logo {
+  height: 40px;
+  width: auto;
+  margin-bottom: 26px;
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-copy h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(32px, 3.4vw, 49px);
+  line-height: 1.061;
+  letter-spacing: -0.01em;
+  margin-bottom: 34px;
+}
+
+.ticker { display: flex; flex-direction: column; gap: 12px; min-height: 66px; }
+
+.ticker-label { font-size: 17px; font-weight: 500; color: var(--ink); }
+
+.ticker-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  color: var(--ink-2);
+  animation: rise 0.55s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.ticker-icon { display: inline-flex; color: var(--ink-2); flex: none; }
+
+.ticker-icon svg { width: 20px; height: 20px; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* В PNG справа 26.12% пустоты, отсюда формула right: визуальный отступ
+   справа равен левому гуттеру 164 при любой высоте окна. */
+.hero-hand {
+  position: absolute;
+  bottom: 0;
+  height: min(96vh, 864px);
+  width: auto;
+  max-width: none;
+  right: calc(164px - 0.3894 * min(96vh, 864px));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.hero-lead {
+  position: absolute;
+  left: 50%;
+  bottom: 45px;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+/* Плашка компактна в покое и раскрывается на ховере и на фокусе.
+   Ширина фиксированная, тянется поле, кнопка не меняется. */
+.lead-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 300px;
+  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-full);
+  padding: 6px;
+  box-shadow: 0 1px 2px rgba(19, 19, 19, 0.04), 0 10px 30px rgba(19, 19, 19, 0.08);
+}
+
+.lead-pill input {
+  font-family: var(--font-body);
+  font-size: 16px;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 12px 10px 12px 16px;
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.lead-pill .btn-start { flex: none; }
+
+@media (hover: hover) {
+  .lead-pill:hover { width: 410px; }
+}
+
+.lead-pill:focus-within { width: 410px; }
+
+.lead-pill input::placeholder { color: var(--ink-4); }
+
+/* ============ 02 Цифры ============ */
+/* NumberFlow рисует бокс в 1.5 кегля, компенсируем паддингом снизу */
+.numbers { align-items: center; text-align: center; padding-bottom: 36px; }
+
+.metric-big {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(64px, 10.5vw, 144px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-label {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--ink);
+  max-width: 600px;
+  animation: rise 0.5s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.metric-big, .metric-label { position: relative; z-index: 1; }
+
+/* ============ 03 Продукт: sticky ============ */
+.product-track {
+  height: 640dvh;
+  position: relative;
+}
+
+.product-stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Три колонки: пустая правая уравновешивает текстовую левую, мокап
+   в середине стоит ровно по центру окна. */
+.stage-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  max-width: none;
+  padding: 0;
+}
+
+/* Текст и мокап в одной строке грида, поэтому центры совпадают */
+.stage-text {
+  position: relative;
+  min-height: 220px;
+  grid-column: 1;
+  margin-left: max(24px, calc((100vw - var(--container)) / 2 + 24px));
+  margin-right: clamp(40px, 4.4vw, 64px);
+}
+
+/* Позиции и прозрачность ведёт JS покадрово, CSS-переходов тут быть не должно */
+.stage-caption {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.stage-caption h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  margin-bottom: 30px;
+  text-wrap: balance;
+}
+
+.stage-caption p { font-size: 16px; line-height: 25px; color: var(--ink-3); text-wrap: pretty; }
+
+.stage-shots {
+  grid-column: 2;
+  justify-self: center;
+  position: relative;
+  height: min(86.7vh, 780px);
+  aspect-ratio: 449 / 920;
+}
+
+.stage-shots img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transform: translate3d(0, 62%, 0) scale(0.94);
+  will-change: transform, opacity;
+}
+
+/* ============ 04 Преимущества ============ */
+/* Бюджет вертикали: top + 40 + 48 + card + 24 + 92 + bottom = 100dvh.
+   Карточка единственная плавающая величина, при 900dvh выходит 432.
+   Содержимое прижато к низу, излишек уходит наверх. */
+.hotel { justify-content: flex-start; }
+
+.hotel-inner {
+  /* 180 при 900dvh, 132 при 760dvh, 92 при 640dvh */
+  --usp-top: clamp(92px, calc(34dvh - 126px), 180px);
+  /* 84 при 900dvh, 52 при 760dvh, 24 при 640dvh */
+  --usp-bottom: clamp(24px, calc(23dvh - 123px), 84px);
+  --usp-title: 40px;
+  --usp-gap-title: 48px;
+  --usp-gap-media: 24px;
+  --usp-text: 92px;
+  --usp-card: clamp(
+    200px,
+    calc(100dvh - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
+    432px
+  );
+
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: var(--usp-top);
+  padding-bottom: var(--usp-bottom);
+}
+
+/* На альбомном телефоне блок не влезает, прижатие увело бы заголовок под шапку */
+@media (min-height: 560px) {
+  .hotel-inner { justify-content: flex-end; }
+}
+
+/* кегль тот же, что у заголовков сцен в блоке с экранами */
+.hotel-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: var(--usp-title);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--usp-gap-title);
+}
+
+/* Отрицательные поля тянут ленту до кромок окна, внутренний паддинг
+   возвращает первую карточку на край контейнера. Снап в attachRailSnap. */
+.usp-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 36px;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: calc(50vw - 50%);
+  padding-right: calc(50vw - 50%);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.usp-row::-webkit-scrollbar { display: none; }
+
+/* лента тащится мышью */
+@media (hover: hover) {
+  .usp-row { cursor: grab; }
+  .usp-row.is-dragging { cursor: grabbing; user-select: none; }
+  .usp-row.is-dragging img { pointer-events: none; }
+}
+
+.usp-col {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 clamp(260px, var(--usp-card), 432px);
+}
+
+.usp-media {
+  width: 100%;
+  height: var(--usp-card);
+  background: var(--bg-media);
+  border-radius: clamp(20px, calc(var(--usp-card) * 0.0788), 32px);
+  margin-bottom: var(--usp-gap-media);
+  flex: none;
+}
+
+.usp-text { min-height: var(--usp-text); }
+
+/* Кегль привязан к карточке: на низком окне текст остаётся в 92px */
+.usp-col b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(19px, calc(var(--usp-card) * 0.0602), 26px);
+  line-height: 1.29;
+  margin-bottom: 5px;
+}
+
+.usp-col p {
+  font-size: clamp(15px, calc(var(--usp-card) * 0.0417), 18px);
+  line-height: 1.35;
+  color: var(--ink-3);
+  max-width: min(370px, 100%);
+}
+
+.hotel .usp-col {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition-delay: calc(var(--i, 0) * 0.06s);
+}
+
+.hotel.in-view .usp-col { opacity: 1; transform: none; }
+
+/* ============ 05 / 06 Футер ============ */
+.footer { justify-content: flex-start; background: var(--bg-canvas); }
+
+/* 594 из 900 = 66dvh, радиус верхних углов ведёт JS */
+.footer-sheet {
+  position: relative;
+  z-index: 1;
+  height: 66dvh;
+  background: var(--bg-card);
+  border-radius: 62px 62px 0 0;
+  padding: 84px 84px 42px;
+}
+
+/* колонки: 465.7 | 234 | 349 | 84 | 139 = 1272 */
+.footer-inner {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 465.7px 1fr 349px 84px 139px;
+  grid-template-rows: auto 1fr;
+}
+
+.footer-left {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer-right { display: contents; }
+
+.footer-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 41px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  margin-top: -8px;
+}
+
+.ft-line { display: block; white-space: nowrap; }
+
+.ft-line2 { display: flex; align-items: baseline; gap: 10px; position: relative; width: fit-content; }
+
+/* слово завалено, курсор как будто тянет его вверх */
+.ft-more { display: inline-block; transform: translateY(6px) rotate(-4deg); transform-origin: left bottom; }
+
+.cursor-mark {
+  position: absolute;
+  left: 71px;
+  top: 35px;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0.8px 0.8px rgba(57, 92, 128, 0.25));
+}
+
+
+.footer-cta-slot { margin-top: 48px; }
+
+.footer-col { grid-row: 1; }
+.footer-col-how { grid-column: 3; }
+.footer-col-contacts { grid-column: 5; }
+
+.footer-sub {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 23px;
+  color: var(--ink-3);
+  margin-bottom: 20px;
+}
+
+.footer-how { font-size: 16px; line-height: 28px; color: var(--ink); }
+
+.footer-contacts {
+  display: flex;
+  flex-direction: column;
+  font-size: 16px;
+  line-height: 27px;
+  color: var(--ink);
+}
+
+.footer-contacts a { text-decoration: none; }
+.footer-contacts a:hover { text-decoration: underline; }
+
+.footer-brand {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: -8px;
+}
+
+.footer-brand p { font-size: 16px; line-height: 28px; color: var(--ink); }
+
+.footer-mark { height: 48px; width: auto; }
+
+/* PNG слоя `mv grd`: 1440×306 под белой плашкой, высота равна свободной полосе */
+.footer-wave {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 100%;
+  height: 34dvh; /* ровно свободная полоса под плашкой 66dvh */
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ============ Мобилка ============ */
+@media (max-width: 860px) {
+  .only-mob { display: inline; }
+
+  /* 01 Hero */
+  .hero { justify-content: flex-start; }
+
+  .hero-grid { padding-top: 80px; }
+
+  .hero-logo { height: 32px; margin-bottom: 18px; }
+
+  .hero-copy { max-width: 100%; }
+
+  .hero-copy h1 { font-size: 31px; line-height: 33px; margin-bottom: 24px; }
+
+  .ticker { min-height: 52px; gap: 4px; }
+  .ticker-label { font-size: 14px; }
+  .ticker-row { font-size: 14px; }
+  .ticker-icon svg { width: 16px; height: 16px; }
+
+  /* max-width:none обязателен, иначе глобальное правило схлопнет картинку */
+  .hero-hand {
+    left: 0;
+    right: auto;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    height: min(68.72vh, 580px);
+    object-fit: cover;
+    object-position: 53.6% 50%;
+  }
+
+  .hero-lead { width: calc(100% - 48px); bottom: 44px; }
+  /* плашка лежит на тёмном силуэте, стекло плотнее */
+  .hero-lead .lead-pill {
+    width: 100%;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+  }
+  /* поле должно вмещать номер целиком */
+  .lead-pill input { padding-left: 14px; }
+  .lead-pill .btn-start { padding-left: 18px; padding-right: 18px; }
+
+  /* 02 Цифры */
+  .metric-big { font-size: 96px; }
+  .metric-label { font-size: 19px; line-height: 25px; font-weight: 700; max-width: 326px; margin-top: 2px; }
+
+  /* 03 Продукт */
+  /* Паддинг сверху равен высоте шапки, содержимое центрируется в
+     оставшейся полосе: зазор сверху равен зазору снизу. */
+  .stage-inner {
+    grid-template-columns: 1fr;
+    gap: 0;
+    height: 100dvh;
+    align-content: center;
+    padding: 70px 24px 0;
+  }
+
+  /* слот под самую длинную сцену, иначе зазор до мокапа гуляет */
+  .stage-text { grid-column: 1; min-height: 124px; margin: 0; }
+  .stage-caption { justify-content: center; max-width: 100%; text-align: center; }
+  .stage-caption h2 {
+    font-size: 28px;
+    line-height: 32px;
+    margin: 0 auto 16px;
+    max-width: 320px;
+  }
+  .stage-caption p { font-size: 15px; line-height: 22px; max-width: 300px; margin: 0 auto; }
+  .stage-shots {
+    grid-column: 1;
+    justify-self: center;
+    margin-top: 20px;
+    height: min(60dvh, 506px);
+  }
+
+  /* Бюджет: top + 64 + 48 + card + 19 + 78 + bottom = 100dvh, при 844
+     карточка выходит 318. Отступ снизу всегда 24, как и слева. */
+  .hotel-inner {
+    /* 293 при 844dvh, на низких экранах меньше, иначе подписи ломаются */
+    --usp-top: clamp(96px, calc(63dvh - 238.8px), 293px);
+    --usp-bottom: 24px;
+    --usp-title: 64px;
+    --usp-gap-title: 48px;
+    --usp-gap-media: 19px;
+    --usp-text: 78px;
+    --usp-card: clamp(
+      180px,
+      calc(100dvh - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
+      318px
+    );
+  }
+
+  .hotel-title { font-size: 32px; line-height: 32px; max-width: 342px; }
+
+  .usp-row { gap: 28px; }
+
+  .usp-col { flex: 0 0 clamp(240px, var(--usp-card), 318px); }
+  .usp-col b { font-size: clamp(17px, calc(var(--usp-card) * 0.0629), 20px); line-height: 1.28; margin-bottom: 4px; }
+  .usp-col p { font-size: clamp(14px, calc(var(--usp-card) * 0.0503), 16px); line-height: 1.32; max-width: min(300px, 100%); }
+
+  /* 05 / 06 Футер */
+  .footer-sheet {
+    height: calc(100dvh - 242px);
+    border-radius: 32px 32px 0 0;
+    padding: 48px 24px 13px;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+
+  .footer-left { display: contents; }
+
+  /* зазор над контактами больше внутреннего, иначе блоки слипаются */
+  .footer-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 56px;
+  }
+
+  .footer-title { font-size: 27px; line-height: 28px; margin-top: -7px; text-align: center; }
+  .ft-line2 { justify-content: center; margin: 0 auto; gap: 6px; }
+  .ft-more { transform: translateY(4px) rotate(-4deg); }
+  .cursor-mark { width: 17px; height: 17px; left: 46px; top: 20px; }
+
+  .footer-cta-slot {
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+  }
+
+  .footer-cta { padding: 14px 24px; font-size: 15px; }
+
+  .footer-col-how { grid-column: 1 / -1; grid-row: 1; }
+  .footer-col-contacts { grid-column: 1; grid-row: 2; }
+  .footer-brand { grid-column: 2; grid-row: 2; align-self: start; gap: 10px; margin-bottom: 0; }
+
+  .footer-sub { font-size: 16px; line-height: 21px; margin-bottom: 21px; }
+  .footer-how { font-size: 14px; line-height: 28px; }
+  .footer-contacts { font-size: 14px; line-height: 26px; }
+  .footer-brand p { font-size: 14px; line-height: 26px; }
+  .footer-mark { height: 32px; }
+
+  /* тот же градиент 1176×250 со сдвигом влево, не растягивать */
+  .footer-wave {
+    left: -393px;
+    width: 1176px;
+    height: 250px;
+  }
+}
