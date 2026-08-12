@@ -300,12 +300,16 @@ function createStepScroller(lenis) {
     move(dir)
   }
 
-  const drive = (target) => {
+  const drive = (target, onComplete) => {
     const from = window.scrollY
     const distance = Math.abs(target - from)
-    if (distance < 1) return
+    if (distance < 1) {
+      onComplete?.()
+      return
+    }
     if (!soft) {
       window.scrollTo(0, target)
+      onComplete?.()
       return
     }
     const duration = clamp(
@@ -323,8 +327,21 @@ function createStepScroller(lenis) {
       lock: true,
       force: true,
       userData: { step: true },
-      onComplete: finish,
+      onComplete: () => {
+        finish()
+        onComplete?.()
+      },
     })
+  }
+
+  const scrollToHero = (onComplete) => {
+    release()
+    const stops = measureStops(lenis)
+    if (!stops.length) {
+      onComplete?.()
+      return
+    }
+    drive(stops[0], onComplete)
   }
 
   /* dir: 1 вниз, -1 вверх, 'start' и 'end' в начало и в конец страницы */
@@ -459,7 +476,13 @@ function createStepScroller(lenis) {
     document.removeEventListener('visibilitychange', onVisibility)
   }
 
-  return { tick, destroy }
+  return { tick, destroy, scrollToHero }
+}
+
+let scrollApi = null
+
+export function scrollToHero(onComplete) {
+  scrollApi?.scrollToHero(onComplete)
 }
 
 export function useSmoothScroll() {
@@ -484,6 +507,7 @@ export function useSmoothScroll() {
 
     /* при prefers-reduced-motion переходы мгновенные */
     const stepper = createStepScroller(lenis)
+    scrollApi = stepper
 
     /* следующий кадр планируем до работы: исключение не убьёт цикл */
     let id = requestAnimationFrame(function loop(time) {
@@ -497,6 +521,7 @@ export function useSmoothScroll() {
       cancelAnimationFrame(id)
       stepper.destroy()
       if (lenis) lenis.destroy()
+      if (scrollApi === stepper) scrollApi = null
     }
   }, [])
 }

@@ -128,6 +128,14 @@ html.lenis, html.lenis body { height: auto; }
 
 .btn-start:active { transform: scale(0.97); background-color: var(--ink); }
 
+.btn-start:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-start:disabled:active { transform: none; }
+
 /* ============ 01 Hero ============ */
 .hero { justify-content: center; }
 
@@ -234,6 +242,53 @@ html.lenis, html.lenis body { height: auto; }
 .lead-pill:focus-within { width: 410px; }
 
 .lead-pill input::placeholder { color: var(--ink-4); }
+
+.lead-pill--error {
+  border-color: rgba(220, 60, 60, 0.45);
+  box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.12);
+}
+
+.form-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 40;
+  width: max-content;
+  transform: translateX(-50%) translateY(12px);
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 14px 20px;
+  border-radius: var(--radius-full);
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  animation: toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  box-shadow: var(--shadow-float);
+}
+
+.form-toast--ok {
+  background: var(--ink);
+  color: #fff;
+}
+
+.form-toast--err {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+}
+
+@keyframes toast-in {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-toast { animation: none; opacity: 1; transform: translateX(-50%); }
+}
 
 /* ============ 02 Цифры ============ */
 /* NumberFlow рисует бокс в 1.5 кегля, компенсируем паддингом снизу */

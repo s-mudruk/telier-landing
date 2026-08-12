@@ -12,7 +12,44 @@ npm run build    # сборка в dist/
 npm run preview  # посмотреть собранное
 ```
 
-Нужен Node 20 или новее. Внешних сервисов и переменных окружения нет.
+Нужен Node 20 или новее. Для отправки заявок нужен `.env` (см. `.env.example`).
+
+## Настройка EmailJS
+
+Скопируйте `.env.example` в `.env`:
+
+```bash
+cp .env.example .env
+```
+
+```
+VITE_EMAILJS_SERVICE_ID=service_xxxxx
+VITE_EMAILJS_TEMPLATE_ID=template_xxxxx
+VITE_EMAILJS_PUBLIC_KEY=xxxxxxxx
+```
+
+Шаблон в [Email Templates](https://dashboard.emailjs.com/admin/templates):
+- **To Email:** `welcome@telier.ru`
+- **Subject:** `Заявка на демо Telier`
+- **Content:** `Номер: {{phone}}`
+- Auto-Reply не включать
+
+Перезапустите `npm run dev`. `.env` не коммитить.
+
+## Деплой на GitHub Pages
+
+Push в `main` запускает [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+
+Secrets в environment **DEPLOY** (Settings → Environments):
+- `VITE_EMAILJS_SERVICE_ID`
+- `VITE_EMAILJS_TEMPLATE_ID`
+- `VITE_EMAILJS_PUBLIC_KEY`
+
+После первого успешного деплоя: Settings → Pages → Source: **GitHub Actions**.
+
+Сайт: `https://s-mudruk.github.io/telier-landing/`
+
+В EmailJS dashboard добавьте этот URL в Allowed origins.
 
 ## Из чего состоит
 
@@ -64,11 +101,7 @@ rAF-цикле после Lenis, чтобы движение шло кадр в 
 
 ## Заменить перед публикацией
 
-- `CTA_URL` в начале `src/App.jsx` это единственный адрес всех кнопок «Заказать демо»
-  (шапка, плашка в hero, футер). Сейчас там заглушка `#`, боевую ссылку подставить
-  в эту одну строку.
-- Форма телефона в hero никуда не отправляет введённый номер, значение остаётся в состоянии
-  компонента. Нужен обработчик отправки.
+- Secrets EmailJS в environment DEPLOY и локальный `.env` для разработки.
 - Телефон `+7 495 975-97-90` и почта `welcome@telier.ru` взяты из макета, стоит подтвердить.
 - Карточки в «Преимуществах» показывают пустые серые плашки `.usp-media`, картинок для них нет.
 - `hero-hand.png` весит 1.8 МБ, перед выкладкой его стоит пережать.

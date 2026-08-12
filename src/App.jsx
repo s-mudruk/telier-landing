@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react'
+import { createPortal } from 'react-dom'
+import emailjs from '@emailjs/browser'
 import NumberFlow from '@number-flow/react'
-import { useSmoothScroll, attachRailSnap, onFrame, clamp, sceneStyle, trackProgress } from './scroll.js'
+import { useSmoothScroll, attachRailSnap, onFrame, clamp, sceneStyle, trackProgress, scrollToHero } from './scroll.js'
 
-/* Адрес всех кнопок «Заказать демо»: шапка, плашка в hero, футер.
-   Заглушка, подставить боевую ссылку перед публикацией. */
-const CTA_URL = '#'
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+const EMAILJS_TO = 'brylev@nfckey.tech'
 
 const PHONE = '+7 495 975-97-90'
 const PHONE_LABEL = '+7 (495) 975-97-90'
-const EMAIL = 'welcome@telier.ru'
 
 /* Короткие слова и предлоги не отрываются от следующего слова.
    keepTail дополнительно склеивает последние два слова строки. */
@@ -151,25 +153,32 @@ function useInView(threshold = 0.4) {
   return [ref, inView]
 }
 
-function Cta({ className = '', children, ...rest }) {
+function Cta({ className = '', children, disabled, ...rest }) {
   return (
-    <a
+    <button
+      type="button"
       className={`btn-start ${className}`.trim()}
-      href={CTA_URL}
-      target="_blank"
-      rel="noreferrer"
+      disabled={disabled}
       {...rest}
     >
       {children}
-    </a>
+    </button>
   )
 }
 
 /* Маска телефона +7 (999) 888-77-66 */
 const PHONE_PREFIX = '+7 ('
 
+function phoneDigits(v) {
+  return v.replace(/\D/g, '').replace(/^[78]/, '')
+}
+
+function isPhoneComplete(v) {
+  return phoneDigits(v).length === 10
+}
+
 function fmtPhone(v) {
-  const d = v.replace(/\D/g, '').replace(/^[78]/, '').slice(0, 10)
+  const d = phoneDigits(v).slice(0, 10)
   if (!d.length) return ''
   let out = PHONE_PREFIX + d.slice(0, 3)
   if (d.length >= 4) out += ') ' + d.slice(3, 6)
@@ -178,13 +187,26 @@ function fmtPhone(v) {
   return out
 }
 
-function PhoneForm({ cta }) {
+const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }, ref) {
   const [val, setVal] = useState('')
-  const ref = useRef(null)
+  const [sending, setSending] = useState(false)
+  const [toast, setToast] = useState(null)
+  const inputRef = useRef(null)
+  const toastTimer = useRef(null)
+
+  const showToast = useCallback((type, message) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast({ type, message })
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+  }, [])
 
   /* Каретка не уходит левее префикса «+7 (» */
   const keepCaret = () => {
-    const el = ref.current
+    const el = inputRef.current
     if (!el || !el.value.startsWith(PHONE_PREFIX)) return
     const min = PHONE_PREFIX.length
     if (el.selectionStart >= min && el.selectionEnd >= min) return
@@ -192,33 +214,91 @@ function PhoneForm({ cta }) {
   }
 
   const toEnd = () => {
-    const el = ref.current
+    const el = inputRef.current
     if (el) el.setSelectionRange(el.value.length, el.value.length)
   }
 
+  const focus = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.focus()
+    setVal((v) => v || PHONE_PREFIX)
+    requestAnimationFrame(toEnd)
+  }, [])
+
+  const submit = useCallback(async () => {
+    if (sending) return
+    if (!isPhoneComplete(val)) {
+      showToast('err', 'Введите полный номер телефона')
+      focus()
+      return
+    }
+    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+      showToast('err', 'Сервис временно недоступен')
+      return
+    }
+    setSending(true)
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        { phone: val, to_email: EMAILJS_TO },
+        EMAILJS_PUBLIC_KEY,
+      )
+      showToast('ok', 'Заявка отправлена, мы скоро свяжемся')
+      setVal('')
+    } catch {
+      showToast('err', 'Не удалось отправить, попробуйте позже')
+    } finally {
+      setSending(false)
+    }
+  }, [val, sending, showToast, focus])
+
+  const tryHero = useCallback(() => {
+    if (isPhoneComplete(val)) submit()
+    else {
+      showToast('err', 'Введите полный номер телефона')
+      focus()
+    }
+  }, [val, submit, showToast, focus])
+
+  useImperativeHandle(ref, () => ({ focus, submit, tryHero }), [focus, submit, tryHero])
+
   return (
-    <div className="lead-pill">
-      <input
-        ref={ref}
-        type="tel"
-        placeholder="Ваш номер"
-        aria-label="Ваш номер телефона"
-        value={val}
-        onChange={(e) => setVal(fmtPhone(e.target.value) || PHONE_PREFIX)}
-        onFocus={() => {
-          setVal((v) => v || PHONE_PREFIX)
-          requestAnimationFrame(toEnd)
-        }}
-        onBlur={() => {
-          if (val === PHONE_PREFIX) setVal('')
-        }}
-        onSelect={keepCaret}
-        onClick={keepCaret}
-      />
-      <Cta>{cta}</Cta>
-    </div>
+    <>
+      <div className={`lead-pill${toast?.type === 'err' && !isPhoneComplete(val) ? ' lead-pill--error' : ''}`}>
+        <input
+          ref={inputRef}
+          type="tel"
+          placeholder="Ваш номер"
+          aria-label="Ваш номер телефона"
+          value={val}
+          disabled={sending}
+          onChange={(e) => setVal(fmtPhone(e.target.value) || PHONE_PREFIX)}
+          onFocus={() => {
+            setVal((v) => v || PHONE_PREFIX)
+            requestAnimationFrame(toEnd)
+          }}
+          onBlur={() => {
+            if (val === PHONE_PREFIX) setVal('')
+          }}
+          onSelect={keepCaret}
+          onClick={keepCaret}
+        />
+        <Cta disabled={sending || ctaDisabled} onClick={onCtaClick}>
+          {sending ? 'Отправка…' : cta}
+        </Cta>
+      </div>
+      {toast &&
+        createPortal(
+          <div className={`form-toast form-toast--${toast.type}`} role="status">
+            {toast.message}
+          </div>,
+          document.body,
+        )}
+    </>
   )
-}
+})
 
 /* ============ Hero ============ */
 function ActionTicker() {
@@ -238,7 +318,7 @@ function ActionTicker() {
   )
 }
 
-function Hero({ heroRef }) {
+function Hero({ heroRef, phoneFormRef, onDemoClick }) {
   return (
     <section ref={heroRef} className="panel hero">
       <div className="container hero-grid">
@@ -250,7 +330,7 @@ function Hero({ heroRef }) {
       </div>
       <img className="hero-hand" src="/assets/hero-hand.png" alt="Приложение Тельер в руке гостя" />
       <div className="hero-lead">
-        <PhoneForm cta="Заказать демо" />
+        <PhoneForm ref={phoneFormRef} cta="Заказать демо" onCtaClick={onDemoClick} />
       </div>
     </section>
   )
@@ -402,7 +482,7 @@ const CursorMark = () => (
   </svg>
 )
 
-function Footer({ footerRef }) {
+function Footer({ footerRef, onDemoClick }) {
   const sheetRef = useRef(null)
 
   useEffect(() => {
@@ -442,7 +522,7 @@ function Footer({ footerRef }) {
               </span>
             </h2>
             <div className="footer-cta-slot">
-              <Cta className="footer-cta">Заказать демо</Cta>
+              <Cta className="footer-cta" onClick={onDemoClick}>Заказать демо</Cta>
             </div>
           </div>
 
@@ -463,7 +543,7 @@ function Footer({ footerRef }) {
               <div className="footer-sub">Контакты</div>
               <div className="footer-contacts">
                 <a href={`tel:${PHONE.replace(/[^+\d]/g, '')}`}>{PHONE_LABEL}</a>
-                <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+                <a href={`mailto:${EMAILJS_TO}`}>{EMAILJS_TO}</a>
               </div>
             </div>
 
@@ -489,8 +569,17 @@ export default function App() {
   useSmoothScroll()
   const heroRef = useRef(null)
   const footerRef = useRef(null)
+  const phoneFormRef = useRef(null)
   const [heroSeen, setHeroSeen] = useState(true)
   const [footerSeen, setFooterSeen] = useState(false)
+
+  const handleDemoClick = useCallback((source) => {
+    const form = phoneFormRef.current
+    if (!form) return
+    if (source === 'hero') form.tryHero()
+    else scrollToHero(() => form.focus())
+  }, [])
+
   useEffect(() => {
     const io1 = new IntersectionObserver(([e]) => setHeroSeen(e.isIntersecting), { threshold: 0.3 })
     const io2 = new IntersectionObserver(([e]) => setFooterSeen(e.isIntersecting), { threshold: 0.3 })
@@ -510,17 +599,18 @@ export default function App() {
           <Cta
             className={`header-start header-fly ${chromeShown ? 'show' : ''}`}
             tabIndex={chromeShown ? 0 : -1}
+            onClick={() => handleDemoClick('scroll')}
           >
             Заказать демо
           </Cta>
         </div>
       </header>
       <main className="snap">
-        <Hero heroRef={heroRef} />
+        <Hero heroRef={heroRef} phoneFormRef={phoneFormRef} onDemoClick={() => handleDemoClick('hero')} />
         <Numbers />
         <ProductSticky />
         <Hotel />
-        <Footer footerRef={footerRef} />
+        <Footer footerRef={footerRef} onDemoClick={() => handleDemoClick('scroll')} />
       </main>
     </>
   )
