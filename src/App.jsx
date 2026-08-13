@@ -2,20 +2,30 @@ import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallba
 import { createPortal } from 'react-dom'
 import emailjs from '@emailjs/browser'
 import NumberFlow from '@number-flow/react'
-import { useSmoothScroll, attachRailSnap, onFrame, clamp, sceneStyle, trackProgress, scrollToHero } from './scroll.js'
+import {
+  useSmoothScroll,
+  attachRailSnap,
+  onFrame,
+  clamp,
+  sceneStyle,
+  trackProgress,
+  scrollToHero,
+  nudgeScroll,
+  isEditable,
+} from './scroll.js'
 
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-const EMAILJS_TO = 'brylev15@yandex.ru'
+/* адрес и получатель заявок, и публичный контакт в футере */
+const CONTACT_EMAIL = 'brylev15@yandex.ru'
 
 const asset = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
 
 const PHONE = '+7 495 975-97-90'
 const PHONE_LABEL = '+7 (495) 975-97-90'
 
-/* Короткие слова и предлоги не отрываются от следующего слова.
-   keepTail дополнительно склеивает последние два слова строки. */
+/* короткие слова клеятся к следующему, keepTail держит последние два слова вместе */
 const GLUE = new Set([
   'в', 'во', 'и', 'а', 'к', 'с', 'со', 'о', 'об', 'у', 'на', 'не', 'по', 'из', 'от', 'до',
   'за', 'над', 'под', 'при', 'для', 'как', 'что', 'уже', 'мы', 'вы', 'но', 'же', 'ни', 'то', 'без',
@@ -24,7 +34,7 @@ const GLUE = new Set([
 const NBSP = '\u00A0'
 
 function typo(src, keepTail = true) {
-  const words = src.replace(/ /g, ' ').split(' ').filter(Boolean)
+  const words = src.split(/\s+/).filter(Boolean)
   let out = ''
   for (let i = 0; i < words.length; i++) {
     out += words[i]
@@ -39,7 +49,7 @@ function typo(src, keepTail = true) {
   return out
 }
 
-/* Живые действия сервиса: тикер в hero */
+/* строки тикера в hero */
 const ACTIONS = [
   { icon: 'check', text: 'Принят заказ на 1 940 ₽' },
   { icon: 'clock', text: 'Массаж забронирован на 14:00' },
@@ -47,7 +57,7 @@ const ACTIONS = [
   { icon: 'globe', text: 'Гость переключился на English' },
 ]
 
-/* Ротация показателей. Плюс и минус к 25 не должны идти подряд. */
+/* ротация показателей, плюс и минус к 25 не подряд */
 const METRICS = [
   { v: 25, prefix: '+', suffix: '%', label: 'к продажам допуслуг, NPS и возврату гостей' },
   { v: 27.6, prefix: '+', suffix: '%', fraction: 1, label: 'рост рынка допуслуг отелей России за 2024 год' },
@@ -55,8 +65,7 @@ const METRICS = [
   { v: 5, suffix: '%', label: 'комиссии, больше никаких платежей' },
 ]
 
-/* Сцены продукта. Описания держать в две строки на мобильном:
-   иначе подписи разной высоты и мокап прыгает. */
+/* сцены продукта, описания держать в две строки иначе мокап прыгает */
 const SCENES = [
   {
     title: 'Единый вход',
@@ -80,7 +89,7 @@ const SCENES = [
   },
 ]
 
-/* Карточки ленты. Описания держать в две строки на любой ширине. */
+/* карточки ленты, описания держать в две строки */
 const USP = [
   {
     t: 'Не чат-бот и не виджет',
@@ -168,7 +177,7 @@ function Cta({ className = '', children, disabled, ...rest }) {
   )
 }
 
-/* Маска телефона +7 (999) 888-77-66 */
+/* маска телефона +7 (999) 888-77-66 */
 const PHONE_PREFIX = '+7 ('
 
 function phoneDigits(v) {
@@ -202,11 +211,31 @@ const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }
     toastTimer.current = setTimeout(() => setToast(null), 4000)
   }, [])
 
+  /* открытая клавиатура перекрывает плашку: подводим её к верхнему краю
+     клавиатуры, после закрытия перевыравнивание скролла вернёт остановку */
+  const keyboardTimers = useRef([])
+
   useEffect(() => () => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
+    keyboardTimers.current.forEach(clearTimeout)
   }, [])
 
-  /* Каретка не уходит левее префикса «+7 (» */
+  const alignToKeyboard = useCallback(() => {
+    const vv = window.visualViewport
+    const pill = inputRef.current?.closest('.lead-pill')
+    if (!vv || !pill) return
+    /* низ плашки на 16px выше верхнего края клавиатуры */
+    const delta = pill.getBoundingClientRect().bottom + 16 - (vv.offsetTop + vv.height)
+    if (Math.abs(delta) > 4) nudgeScroll(delta)
+  }, [])
+
+  const onFocusAlign = useCallback(() => {
+    keyboardTimers.current.forEach(clearTimeout)
+    /* два прохода: клавиатура выезжает не мгновенно */
+    keyboardTimers.current = [350, 700].map((ms) => setTimeout(alignToKeyboard, ms))
+  }, [alignToKeyboard])
+
+  /* каретка не уходит левее префикса «+7 (» */
   const keepCaret = () => {
     const el = inputRef.current
     if (!el || !el.value.startsWith(PHONE_PREFIX)) return
@@ -244,7 +273,7 @@ const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }
       await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
-        { phone: val, to_email: EMAILJS_TO },
+        { phone: val, to_email: CONTACT_EMAIL },
         EMAILJS_PUBLIC_KEY,
       )
       showToast('ok', 'Заявка отправлена, мы скоро свяжемся')
@@ -280,8 +309,11 @@ const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }
           onFocus={() => {
             setVal((v) => v || PHONE_PREFIX)
             requestAnimationFrame(toEnd)
+            onFocusAlign()
           }}
           onBlur={() => {
+            keyboardTimers.current.forEach(clearTimeout)
+            keyboardTimers.current = []
             if (val === PHONE_PREFIX) setVal('')
           }}
           onSelect={keepCaret}
@@ -365,7 +397,7 @@ function Numbers() {
 }
 
 /* ============ Продукт: sticky-сцена ============ */
-/* Кривые в scene-timing.js, здесь только раскладка значений по DOM */
+/* кривые в scene-timing.js, здесь только раскладка значений по DOM */
 function ProductSticky() {
   const trackRef = useRef(null)
   const capRefs = useRef([])
@@ -441,7 +473,7 @@ function ProductSticky() {
 }
 
 /* ============ Преимущества ============ */
-/* Лента шире экрана. Протяжка мышью и доводка в attachRailSnap. */
+/* лента шире экрана, протяжка мышью и доводка в attachRailSnap */
 function Hotel() {
   const [ref, inView] = useInView(0.3)
   const railRef = useRef(null)
@@ -471,7 +503,7 @@ function Hotel() {
 }
 
 /* ============ Футер ============ */
-/* Курсор из макета поверх слова «больше» */
+/* курсор из макета поверх слова «больше» */
 const CursorMark = () => (
   <svg className="cursor-mark" viewBox="0 0 26.45 26.45" fill="none" aria-hidden="true">
     <path
@@ -491,19 +523,20 @@ function Footer({ footerRef, onDemoClick }) {
     const sheet = sheetRef.current
     if (!sheet) return
 
-    let prevR = -1
+    let prev = ''
 
     const apply = () => {
+      /* 860 согласован с css-брейкпоинтом мобилки */
       const mob = window.innerWidth <= 860
       const vh = window.innerHeight
 
       /* десктоп: радиус едет с 62 до 24, мобилка всегда 32 */
       const rp = clamp(sheet.getBoundingClientRect().top / (vh * 0.34), 0, 1)
       const r = mob ? 32 : 24 + 38 * rp
-      if (Math.abs(rp - prevR) > 0.002) {
-        prevR = rp
-        sheet.style.borderTopLeftRadius = sheet.style.borderTopRightRadius = `${r.toFixed(1)}px`
-      }
+      const key = `${mob}|${rp.toFixed(3)}`
+      if (key === prev) return
+      prev = key
+      sheet.style.borderTopLeftRadius = sheet.style.borderTopRightRadius = `${r.toFixed(1)}px`
     }
 
     apply()
@@ -545,7 +578,7 @@ function Footer({ footerRef, onDemoClick }) {
               <div className="footer-sub">Контакты</div>
               <div className="footer-contacts">
                 <a href={`tel:${PHONE.replace(/[^+\d]/g, '')}`}>{PHONE_LABEL}</a>
-                <a href={`mailto:${EMAILJS_TO}`}>{EMAILJS_TO}</a>
+                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
               </div>
             </div>
 
@@ -561,14 +594,64 @@ function Footer({ footerRef, onDemoClick }) {
         </div>
       </div>
 
-      {/* слой `mv grd` из макета, 1440×306 под плашкой */}
+      {/* слой mv grd из макета, 1440×306 под плашкой */}
       <img className="footer-wave" src={asset('/assets/footer-wave.png')} alt="" aria-hidden="true" />
     </section>
   )
 }
 
+const DEBUG = new URLSearchParams(window.location.search).has('debug')
+
+/* живые размеры вьюпорта на экране, для разбора мобильных браузеров */
+function DebugHud({ scrollerRef }) {
+  const [line, setLine] = useState('')
+  useEffect(() => {
+    const t = setInterval(() => {
+      const vv = window.visualViewport
+      const el = scrollerRef.current
+      const ah = getComputedStyle(document.documentElement).getPropertyValue('--app-h').trim()
+      setLine(
+        `in ${window.innerWidth}×${window.innerHeight} | ` +
+          (vv ? `vv ${Math.round(vv.width)}×${Math.round(vv.height)}+${Math.round(vv.offsetTop)} | ` : '') +
+          (el ? `sc ${el.clientHeight} y${Math.round(el.scrollTop)}/${el.scrollHeight} | ` : '') +
+          `ah ${ah || 'auto'} | ${document.documentElement.className || 'no-flags'}`,
+      )
+    }, 300)
+    return () => clearInterval(t)
+  }, [scrollerRef])
+  return <div className="debug-hud">{line}</div>
+}
+
 export default function App() {
-  useSmoothScroll()
+  const scrollerRef = useRef(null)
+  useSmoothScroll(scrollerRef)
+
+  /* высота секций заморожена в px: обновляется на реальный resize,
+     клавиатура (фокус в поле) раскладку не меняет */
+  useEffect(() => {
+    const root = document.documentElement
+    const apply = () => {
+      if (isEditable(document.activeElement)) return
+      const w = window.innerWidth
+      const h = window.innerHeight
+      root.style.setProperty('--app-h', `${h}px`)
+      root.classList.toggle('is-compact', w <= 860 && h <= 740)
+      root.classList.toggle('is-portrait', h > w)
+      root.classList.toggle('is-tall', h >= 560)
+    }
+    /* ресайз, съеденный заморозкой при фокусе, доигрывается после ухода фокуса */
+    const onFocusOut = () => requestAnimationFrame(apply)
+    apply()
+    window.addEventListener('resize', apply)
+    window.addEventListener('focusout', onFocusOut)
+    window.visualViewport?.addEventListener('resize', apply)
+    return () => {
+      window.removeEventListener('resize', apply)
+      window.removeEventListener('focusout', onFocusOut)
+      window.visualViewport?.removeEventListener('resize', apply)
+    }
+  }, [])
+
   const heroRef = useRef(null)
   const footerRef = useRef(null)
   const phoneFormRef = useRef(null)
@@ -599,7 +682,7 @@ export default function App() {
         <div className="container header-row">
           <img className={`logo header-fly ${chromeShown ? 'show' : ''}`} src={asset('/assets/logo.svg')} alt="Тельер" />
           <Cta
-            className={`header-start header-fly ${chromeShown ? 'show' : ''}`}
+            className={`header-fly ${chromeShown ? 'show' : ''}`}
             tabIndex={chromeShown ? 0 : -1}
             onClick={() => handleDemoClick('scroll')}
           >
@@ -607,13 +690,20 @@ export default function App() {
           </Cta>
         </div>
       </header>
-      <main className="snap">
-        <Hero heroRef={heroRef} phoneFormRef={phoneFormRef} onDemoClick={() => handleDemoClick('hero')} />
-        <Numbers />
-        <ProductSticky />
-        <Hotel />
-        <Footer footerRef={footerRef} onDemoClick={() => handleDemoClick('scroll')} />
+      <main className="snap" ref={scrollerRef}>
+        <div className="snap-inner">
+          <Hero heroRef={heroRef} phoneFormRef={phoneFormRef} onDemoClick={() => handleDemoClick('hero')} />
+          <Numbers />
+          <ProductSticky />
+          <Hotel />
+          <Footer footerRef={footerRef} onDemoClick={() => handleDemoClick('scroll')} />
+        </div>
       </main>
+      {/* волна за полупрозрачной нижней панелью браузера: фикс-слой ниже вьюпорта */}
+      <div className={`footer-under${footerSeen ? ' show' : ''}`} aria-hidden="true">
+        <img src={asset('/assets/footer-wave.png')} alt="" />
+      </div>
+      {DEBUG && <DebugHud scrollerRef={scrollerRef} />}
     </>
   )
 }

@@ -24,11 +24,39 @@
   --shadow-float: 0 8px 24px rgba(19, 19, 19, 0.1), 0 24px 64px rgba(19, 19, 19, 0.12);
 
   --container: 1160px;
+
+  /* кадр hero и футера: до 1440 равен окну, дальше растёт медленнее и замирает на 1800 */
+  --frame: min(100vw, clamp(1440px, 720px + 50vw, 1800px));
+
+  /* левая линия сетки: до 1440 край контейнера, дальше гуттер кадра, на 1440 обе дают 164 */
+  --edge: max(24px, calc((100vw - var(--container)) / 2 + 24px));
+}
+
+@media (min-width: 1440px) {
+  :root { --edge: calc((100vw - var(--frame)) / 2 + 164px); }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { min-height: 100%; }
-body { overflow-x: hidden; }
+/* фон и на html, и на body: новый safari красит статус-бар по фону страницы */
+html, body { height: 100%; overflow: hidden; background: var(--bg-canvas); }
+
+/* цвет статус-бара всегда канвас: webkit сэмплирует fixed-элементы у верхней
+   кромки, без этой полосы белый футер перекрашивает бар */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--bg-canvas);
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* корень это неподвижная рамка приложения, документ не скроллится вообще:
+   браузер не может ни увести страницу сам, ни сдвинуть секции пересчётом dvh */
+#root { position: fixed; inset: 0; overflow: hidden; }
 
 body {
   font-family: var(--font-body);
@@ -52,18 +80,26 @@ a { color: inherit; }
 .only-mob { display: none; }
 
 /* ============ Скролл ============ */
-/* Скроллит документ, инерция на Lenis. CSS-снап не возвращать: рывки. */
-.snap { position: relative; }
+/* единственный скроллер страницы, инерция на lenis, css-снап не возвращать: рывки */
+/* скроллбар спрятан: шаги ведёт степпер, а гуттер скроллбара сдвинул бы сетку от 100vw */
+.snap {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
 
-/* Рекомендованный Lenis сброс */
-html.lenis, html.lenis body { height: auto; }
+.snap::-webkit-scrollbar { display: none; }
+
+/* рекомендованный сброс lenis, классы живут на скроллере */
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
 
 .panel {
-  height: 100dvh;
+  height: var(--app-h, 100dvh);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -72,7 +108,6 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
 }
 
@@ -86,6 +121,9 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .header.hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+
+/* шапка стоит на линии сетки, а не в контейнере: на широких экранах совпадает с hero */
+.header .container { max-width: none; padding: 0 var(--edge); }
 
 .header-row { display: flex; align-items: center; justify-content: space-between; }
 
@@ -104,7 +142,7 @@ html.lenis, html.lenis body { height: auto; }
   pointer-events: auto;
 }
 
-/* Кнопка одного размера всегда: отклик это фон и сжатие на нажатие */
+/* кнопка одного размера всегда, отклик это фон и сжатие на нажатие */
 .btn-start {
   display: inline-flex;
   align-items: center;
@@ -120,7 +158,7 @@ html.lenis, html.lenis body { height: auto; }
   border: none;
   cursor: pointer;
   border-radius: var(--radius-full);
-  padding: 15px 22px;
+  padding: 14px 24px;
   transition: background-color 0.2s ease, transform 0.12s ease;
 }
 
@@ -139,36 +177,45 @@ html.lenis, html.lenis body { height: auto; }
 /* ============ 01 Hero ============ */
 .hero { justify-content: center; }
 
-.hero-grid { position: relative; z-index: 2; }
+.hero-grid {
+  position: relative;
+  z-index: 2;
+}
+
+/* с 1440 текст hero живёт в кадре, левое поле равно правому полю руки;
+   ниже работает контейнер, на ровно 1440 обе формулы дают 164 */
+@media (min-width: 1440px) {
+  .hero-grid { max-width: calc(var(--frame) - 280px); }
+}
 
 /* 600 из макета: перенос заголовка без наезда на руку */
-.hero-copy { max-width: 600px; }
+.hero-copy { max-width: clamp(600px, 41.67vw, 700px); }
 
 .hero-logo {
-  height: 40px;
+  height: clamp(40px, 2.78vw, 46px);
   width: auto;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
   animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-copy h1 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(32px, 3.4vw, 49px);
+  font-size: clamp(32px, 3.4vw, 56px);
   line-height: 1.061;
   letter-spacing: -0.01em;
-  margin-bottom: 34px;
+  margin-bottom: 32px;
 }
 
-.ticker { display: flex; flex-direction: column; gap: 12px; min-height: 66px; }
+.ticker { display: flex; flex-direction: column; gap: 12px; min-height: 64px; }
 
-.ticker-label { font-size: 17px; font-weight: 500; color: var(--ink); }
+.ticker-label { font-size: clamp(17px, 1.181vw, 20px); font-weight: 500; color: var(--ink); }
 
 .ticker-row {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 17px;
+  font-size: clamp(17px, 1.181vw, 20px);
   color: var(--ink-2);
   animation: rise 0.55s cubic-bezier(0.3, 0, 0.2, 1);
 }
@@ -182,15 +229,15 @@ html.lenis, html.lenis body { height: auto; }
   to { opacity: 1; transform: none; }
 }
 
-/* В PNG справа 26.12% пустоты, отсюда формула right: визуальный отступ
-   справа равен левому гуттеру 164 при любой высоте окна. */
+/* в png справа 26.12% пустоты, формула right держит гуттер 164 от края кадра */
 .hero-hand {
+  --hand-h: min(calc(var(--app-h, 100dvh) * 0.98), clamp(890px, 62vw, 1000px));
   position: absolute;
   bottom: 0;
-  height: min(96vh, 864px);
+  height: var(--hand-h);
   width: auto;
   max-width: none;
-  right: calc(164px - 0.3894 * min(96vh, 864px));
+  right: calc((100vw - var(--frame)) / 2 + 164px - 0.3894 * var(--hand-h));
   mix-blend-mode: multiply;
   pointer-events: none;
 }
@@ -198,13 +245,12 @@ html.lenis, html.lenis body { height: auto; }
 .hero-lead {
   position: absolute;
   left: 50%;
-  bottom: 45px;
+  bottom: calc(24px + max(20px, env(safe-area-inset-bottom, 0px)));
   transform: translateX(-50%);
   z-index: 3;
 }
 
-/* Плашка компактна в покое и раскрывается на ховере и на фокусе.
-   Ширина фиксированная, тянется поле, кнопка не меняется. */
+/* плашка раскрывается на ховере и фокусе, тянется только поле */
 .lead-pill {
   display: flex;
   align-items: center;
@@ -291,13 +337,14 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* ============ 02 Цифры ============ */
-/* NumberFlow рисует бокс в 1.5 кегля, компенсируем паддингом снизу */
+/* numberflow рисует бокс в 1.5 кегля, компенсируем паддингом снизу */
 .numbers { align-items: center; text-align: center; padding-bottom: 36px; }
 
+/* вложенный clamp: после 1440 потолок сам растёт и замирает, вид на 1440 не меняется */
 .metric-big {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(64px, 10.5vw, 144px);
+  font-size: clamp(64px, 10.5vw, clamp(144px, 10vw, 160px));
   line-height: 1;
   letter-spacing: -0.02em;
   color: var(--accent);
@@ -305,35 +352,33 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .metric-label {
-  margin-top: 10px;
+  margin-top: 8px;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 24px;
-  line-height: 30px;
+  font-size: clamp(24px, 1.667vw, 28px);
+  line-height: 1.25;
   color: var(--ink);
   max-width: 600px;
   animation: rise 0.5s cubic-bezier(0.3, 0, 0.2, 1);
 }
 
-.metric-big, .metric-label { position: relative; z-index: 1; }
-
 /* ============ 03 Продукт: sticky ============ */
+/* 6.4 экрана на 4 сцены, менять вместе со SCENES в App.jsx */
 .product-track {
-  height: 640dvh;
+  height: calc(var(--app-h, 100dvh) * 6.4);
   position: relative;
 }
 
 .product-stage {
   position: sticky;
   top: 0;
-  height: 100dvh;
+  height: var(--app-h, 100dvh);
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-/* Три колонки: пустая правая уравновешивает текстовую левую, мокап
-   в середине стоит ровно по центру окна. */
+/* пустая правая колонка уравновешивает текстовую, мокап ровно по центру окна */
 .stage-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -343,16 +388,16 @@ html.lenis, html.lenis body { height: auto; }
   padding: 0;
 }
 
-/* Текст и мокап в одной строке грида, поэтому центры совпадают */
+/* текст и мокап в одной строке грида, центры совпадают */
 .stage-text {
   position: relative;
   min-height: 220px;
   grid-column: 1;
-  margin-left: max(24px, calc((100vw - var(--container)) / 2 + 24px));
+  margin-left: var(--edge);
   margin-right: clamp(40px, 4.4vw, 64px);
 }
 
-/* Позиции и прозрачность ведёт JS покадрово, CSS-переходов тут быть не должно */
+/* позиции и прозрачность ведёт js покадрово, css-переходов тут быть не должно */
 .stage-caption {
   position: absolute;
   inset: 0;
@@ -366,10 +411,10 @@ html.lenis, html.lenis body { height: auto; }
 .stage-caption h2 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(24px, 2.6vw, 36px);
-  line-height: 40px;
+  font-size: clamp(24px, 2.6vw, clamp(36px, 2.5vw, 41px));
+  line-height: 1.11;
   letter-spacing: -0.01em;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
   text-wrap: balance;
 }
 
@@ -379,7 +424,7 @@ html.lenis, html.lenis body { height: auto; }
   grid-column: 2;
   justify-self: center;
   position: relative;
-  height: min(86.7vh, 780px);
+  height: min(calc(var(--app-h, 100dvh) * 0.867), clamp(780px, 54.16vw, 880px));
   aspect-ratio: 449 / 920;
 }
 
@@ -395,24 +440,25 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* ============ 04 Преимущества ============ */
-/* Бюджет вертикали: top + 40 + 48 + card + 24 + 92 + bottom = 100dvh.
-   Карточка единственная плавающая величина, при 900dvh выходит 432.
-   Содержимое прижато к низу, излишек уходит наверх. */
+/* бюджет вертикали: top + 40 + 48 + card + 24 + 92 + bottom = высота экрана, плавает только карточка */
 .hotel { justify-content: flex-start; }
 
+/* секция стоит на линии сетки: лента через 50%−50vw сама дотягивается до кромок */
+.hotel .container { max-width: none; padding-left: var(--edge); padding-right: var(--edge); }
+
 .hotel-inner {
-  /* 180 при 900dvh, 132 при 760dvh, 92 при 640dvh */
-  --usp-top: clamp(92px, calc(34dvh - 126px), 180px);
-  /* 84 при 900dvh, 52 при 760dvh, 24 при 640dvh */
-  --usp-bottom: clamp(24px, calc(23dvh - 123px), 84px);
+  /* 180 при высоте 900, 132 при 760, 92 при 640 */
+  --usp-top: clamp(92px, calc(var(--app-h, 100dvh) * 0.34 - 126px), 180px);
+  /* 84 при высоте 900, 52 при 760, 24 при 640 */
+  --usp-bottom: clamp(24px, calc(var(--app-h, 100dvh) * 0.23 - 123px), 84px);
   --usp-title: 40px;
   --usp-gap-title: 48px;
   --usp-gap-media: 24px;
   --usp-text: 92px;
   --usp-card: clamp(
     200px,
-    calc(100dvh - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
-    432px
+    calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
+    clamp(432px, 30vw, 500px)
   );
 
   height: 100%;
@@ -423,23 +469,22 @@ html.lenis, html.lenis body { height: auto; }
   padding-bottom: var(--usp-bottom);
 }
 
-/* На альбомном телефоне блок не влезает, прижатие увело бы заголовок под шапку */
-@media (min-height: 560px) {
-  .hotel-inner { justify-content: flex-end; }
-}
+/* на низком окне блок не влезает, прижатие увело бы заголовок под шапку;
+   класс ставит js по замороженной высоте, media по высоте дёргала бы клавиатура */
+:root.is-tall .hotel-inner { justify-content: flex-end; }
 
 /* кегль тот же, что у заголовков сцен в блоке с экранами */
 .hotel-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(24px, 2.6vw, 36px);
+  /* потолок 40 равен строке --usp-title, иначе на очень широких кегль вылезает из бюджета */
+  font-size: clamp(24px, 2.6vw, clamp(36px, 2.5vw, 40px));
   line-height: var(--usp-title);
   letter-spacing: -0.01em;
   margin-bottom: var(--usp-gap-title);
 }
 
-/* Отрицательные поля тянут ленту до кромок окна, внутренний паддинг
-   возвращает первую карточку на край контейнера. Снап в attachRailSnap. */
+/* отрицательные поля тянут ленту до кромок окна, паддинг возвращает первую карточку на контейнер */
 .usp-row {
   display: flex;
   align-items: flex-start;
@@ -465,7 +510,7 @@ html.lenis, html.lenis body { height: auto; }
 .usp-col {
   display: flex;
   flex-direction: column;
-  flex: 0 0 clamp(260px, var(--usp-card), 432px);
+  flex: 0 0 clamp(260px, var(--usp-card), 500px);
 }
 
 .usp-media {
@@ -479,14 +524,14 @@ html.lenis, html.lenis body { height: auto; }
 
 .usp-text { min-height: var(--usp-text); }
 
-/* Кегль привязан к карточке: на низком окне текст остаётся в 92px */
+/* кегль привязан к карточке, на низком окне текст остаётся в 92px */
 .usp-col b {
   display: block;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(19px, calc(var(--usp-card) * 0.0602), 26px);
   line-height: 1.29;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .usp-col p {
@@ -508,19 +553,22 @@ html.lenis, html.lenis body { height: auto; }
 /* ============ 05 / 06 Футер ============ */
 .footer { justify-content: flex-start; background: var(--bg-canvas); }
 
-/* 594 из 900 = 66dvh, радиус верхних углов ведёт JS */
+/* 594 из 900 = 66% высоты, радиус верхних углов ведёт js */
 .footer-sheet {
   position: relative;
   z-index: 1;
-  height: 66dvh;
+  height: calc(var(--app-h, 100dvh) * 0.66);
   background: var(--bg-card);
   border-radius: 62px 62px 0 0;
   padding: 84px 84px 42px;
 }
 
-/* колонки: 465.7 | 234 | 349 | 84 | 139 = 1272 */
+/* колонки 465.7 | 234 | 349 | 84 | 139 = 1272, гибкая вторая забирает нехватку ширины */
+/* к 1600 гуттер 84 плавно доезжает до линии сетки 164 кадра, мак 1440 не тронут */
 .footer-inner {
   height: 100%;
+  max-width: calc(var(--frame) - 168px - 2 * clamp(0px, (100vw - 1440px) * 0.5, 80px));
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 465.7px 1fr 349px 84px 139px;
   grid-template-rows: auto 1fr;
@@ -539,8 +587,8 @@ html.lenis, html.lenis body { height: auto; }
 .footer-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 41px;
-  line-height: 40px;
+  font-size: clamp(41px, 2.85vw, 47px);
+  line-height: 0.976;
   letter-spacing: -0.01em;
   margin-top: -8px;
 }
@@ -560,7 +608,6 @@ html.lenis, html.lenis body { height: auto; }
   height: 24px;
   filter: drop-shadow(0 0.8px 0.8px rgba(57, 92, 128, 0.25));
 }
-
 
 .footer-cta-slot { margin-top: 48px; }
 
@@ -605,29 +652,33 @@ html.lenis, html.lenis body { height: auto; }
 
 .footer-mark { height: 48px; width: auto; }
 
-/* PNG слоя `mv grd`: 1440×306 под белой плашкой, высота равна свободной полосе */
+/* png слоя mv grd 1440×306 под белой плашкой, высота равна свободной полосе */
 .footer-wave {
   position: absolute;
   left: 0;
   bottom: 0;
   z-index: 0;
   width: 100%;
-  height: 34dvh; /* ровно свободная полоса под плашкой 66dvh */
+  height: calc(var(--app-h, 100dvh) * 0.34); /* ровно свободная полоса под плашкой */
   max-width: none;
   pointer-events: none;
   user-select: none;
 }
 
+/* волна-подложка под нижней панелью браузера, живёт только на мобилке */
+.footer-under { display: none; }
+
 /* ============ Мобилка ============ */
+/* брейкпоинт 860 продублирован в scroll.js RAIL.media и App.jsx */
 @media (max-width: 860px) {
   .only-mob { display: inline; }
 
   /* 01 Hero */
   .hero { justify-content: flex-start; }
 
-  .hero-grid { padding-top: 80px; }
+  .hero-grid { padding-top: 80px; max-width: none; }
 
-  .hero-logo { height: 32px; margin-bottom: 18px; }
+  .hero-logo { height: 32px; margin-bottom: 16px; }
 
   .hero-copy { max-width: 100%; }
 
@@ -638,20 +689,19 @@ html.lenis, html.lenis body { height: auto; }
   .ticker-row { font-size: 14px; }
   .ticker-icon svg { width: 16px; height: 16px; }
 
-  /* max-width:none обязателен, иначе глобальное правило схлопнет картинку */
+  /* телефон в фото по центру экрана, max-width:none обязателен иначе картинка схлопнется */
   .hero-hand {
-    left: 0;
+    left: 50%;
     right: auto;
     bottom: 0;
-    transform: none;
-    width: 100%;
+    transform: translateX(-53.6%);
+    width: auto;
     max-width: none;
-    height: min(68.72vh, 580px);
-    object-fit: cover;
-    object-position: 53.6% 50%;
+    height: min(calc(var(--app-h, 100dvh) * 0.6872), 580px);
   }
 
-  .hero-lead { width: calc(100% - 48px); bottom: 44px; }
+  /* отступ снизу равен боковым, как у шапки */
+  .hero-lead { width: calc(100% - 48px); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
   /* плашка лежит на тёмном силуэте, стекло плотнее */
   .hero-lead .lead-pill {
     width: 100%;
@@ -662,19 +712,22 @@ html.lenis, html.lenis body { height: auto; }
   }
   /* поле должно вмещать номер целиком */
   .lead-pill input { padding-left: 14px; }
-  .lead-pill .btn-start { padding-left: 18px; padding-right: 18px; }
+  .lead-pill .btn-start { padding-left: 16px; padding-right: 16px; }
 
   /* 02 Цифры */
+  /* без десктопной компенсации: на мобильном кегле бокс numberflow симметричен,
+     паддинг уводил блок выше центра */
+  .numbers { padding-bottom: 0; }
+
   .metric-big { font-size: 96px; }
   .metric-label { font-size: 19px; line-height: 25px; font-weight: 700; max-width: 326px; margin-top: 2px; }
 
   /* 03 Продукт */
-  /* Паддинг сверху равен высоте шапки, содержимое центрируется в
-     оставшейся полосе: зазор сверху равен зазору снизу. */
+  /* 70 держит контент под шапкой, зазор сверху равен зазору снизу */
   .stage-inner {
     grid-template-columns: 1fr;
     gap: 0;
-    height: 100dvh;
+    height: var(--app-h, 100dvh);
     align-content: center;
     padding: 70px 24px 0;
   }
@@ -693,22 +746,21 @@ html.lenis, html.lenis body { height: auto; }
     grid-column: 1;
     justify-self: center;
     margin-top: 20px;
-    height: min(60dvh, 506px);
+    height: min(calc(var(--app-h, 100dvh) * 0.6), 506px);
   }
 
-  /* Бюджет: top + 64 + 48 + card + 19 + 78 + bottom = 100dvh, при 844
-     карточка выходит 318. Отступ снизу всегда 24, как и слева. */
+  /* бюджет: top + 64 + 48 + card + 19 + 78 + bottom = высота экрана, при 844 карточка 318 */
   .hotel-inner {
-    /* 293 при 844dvh, на низких экранах меньше, иначе подписи ломаются */
-    --usp-top: clamp(96px, calc(63dvh - 238.8px), 293px);
-    --usp-bottom: 24px;
+    /* 293 при высоте 844, на низких экранах меньше, иначе подписи ломаются */
+    --usp-top: clamp(96px, calc(var(--app-h, 100dvh) * 0.63 - 238.8px), 293px);
+    --usp-bottom: calc(16px + max(8px, env(safe-area-inset-bottom, 0px)));
     --usp-title: 64px;
     --usp-gap-title: 48px;
     --usp-gap-media: 19px;
     --usp-text: 78px;
     --usp-card: clamp(
       180px,
-      calc(100dvh - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
+      calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
       318px
     );
   }
@@ -722,10 +774,11 @@ html.lenis, html.lenis body { height: auto; }
   .usp-col p { font-size: clamp(14px, calc(var(--usp-card) * 0.0503), 16px); line-height: 1.32; max-width: min(300px, 100%); }
 
   /* 05 / 06 Футер */
+  /* env(safe-area-inset-bottom) не ноль только в webview с принудительным viewport-fit=cover */
   .footer-sheet {
-    height: calc(100dvh - 242px);
+    height: calc(var(--app-h, 100dvh) - 242px);
     border-radius: 32px 32px 0 0;
-    padding: 48px 24px 13px;
+    padding: 48px 24px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .footer-inner {
@@ -733,6 +786,8 @@ html.lenis, html.lenis body { height: auto; }
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
+    max-width: none;
+    margin: 0;
   }
 
   .footer-left { display: contents; }
@@ -749,8 +804,11 @@ html.lenis, html.lenis body { height: auto; }
   .ft-more { transform: translateY(4px) rotate(-4deg); }
   .cursor-mark { width: 17px; height: 17px; left: 46px; top: 20px; }
 
+  /* кнопка занимает свободную середину плашки между заголовком и текстами */
   .footer-cta-slot {
+    flex: 1;
     display: flex;
+    align-items: center;
     justify-content: center;
     margin-top: 0;
   }
@@ -761,16 +819,86 @@ html.lenis, html.lenis body { height: auto; }
   .footer-col-contacts { grid-column: 1; grid-row: 2; }
   .footer-brand { grid-column: 2; grid-row: 2; align-self: start; gap: 10px; margin-bottom: 0; }
 
-  .footer-sub { font-size: 16px; line-height: 21px; margin-bottom: 21px; }
+  .footer-sub { font-size: 16px; line-height: 21px; margin-bottom: 20px; }
   .footer-how { font-size: 14px; line-height: 28px; }
   .footer-contacts { font-size: 14px; line-height: 26px; }
   .footer-brand p { font-size: 14px; line-height: 26px; }
   .footer-mark { height: 32px; }
 
-  /* тот же градиент 1176×250 со сдвигом влево, не растягивать */
+  /* градиент 1176×250 не растягивать, середина волны по центру экрана */
   .footer-wave {
-    left: -393px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 1176px;
     height: 250px;
   }
+
+  /* зеркальная волна за полупрозрачной нижней панелью браузера: фикс-слой ниже вьюпорта */
+  .footer-under {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -140px;
+    height: 140px;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .footer-under.show { opacity: 1; }
+
+  .footer-under img {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleY(-1);
+    width: 1176px;
+    max-width: none;
+    height: 250px;
+  }
+}
+
+/* ============ Короткий мобильный вьюпорт ============ */
+/* классы ставит js по замороженной высоте: media по высоте дёргалась бы от клавиатуры.
+   is-compact это ширина до 860 и высота до 740: тикер прячется, плашке футера вся высота */
+:root.is-compact .hero-grid { padding-top: 28px; }
+
+:root.is-compact .ticker { display: none; }
+
+/* плашка на весь экран, волна фоном под текстами */
+/* z-index auto обязателен: стек плашки положил бы волну поверх текстов */
+:root.is-compact .footer-sheet {
+  height: 100%;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: auto;
+}
+
+:root.is-compact .footer-wave { z-index: 1; }
+
+:root.is-compact .footer-inner { position: relative; z-index: 2; }
+
+/* рука в полный рост только в портрете, в альбомной ориентации остаётся базовая малая */
+/* корпус телефона в фото на 12% ниже кромки, якорь 94 ставит его верх в 20px под заголовком */
+:root.is-compact.is-portrait .hero-hand {
+  top: 94px;
+  bottom: auto;
+  height: 580px;
+}
+
+/* ============ Отладка: ?debug=1 ============ */
+.debug-hud {
+  position: fixed;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  z-index: 99;
+  font: 10px/1.4 monospace;
+  color: #9f6;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 4px 6px;
+  border-radius: 6px;
+  pointer-events: none;
+  word-break: break-all;
 }

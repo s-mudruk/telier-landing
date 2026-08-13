@@ -1,11 +1,11 @@
-/* Тайминг sticky-сцены продукта: одна сцена на один жест скролла */
+/* тайминг sticky-сцены продукта: одна сцена на один жест скролла */
 
 export function clamp(v, min, max) {
   return v < min ? min : v > max ? max : v
 }
 
 /* сглаживает кроссфейд по краям */
-export function smoothstep(v) {
+function smoothstep(v) {
   const t = clamp(v, 0, 1)
   return t * t * (3 - 2 * t)
 }
@@ -17,19 +17,17 @@ const round = (v, digits) => {
 
 /* ============ Тайминг sticky-сцены продукта ============ */
 
-/* Единица измерения это шаг между центрами соседних сцен, он же один жест.
-   ИНВАРИАНТ мокапов: 2 * hold + fade === 1, тогда сумма прозрачностей
-   соседних сцен в любом кадре ровно 1, без провала в пустой кадр.
-   У текста сумма меньше 1 намеренно: между заголовками нужна пауза. */
-export const SCENE_TIMING = {
+/* единица это шаг между центрами соседних сцен, он же один жест */
+/* инвариант мокапов: 2*hold + fade === 1, иначе провал в пустой кадр на пересменке */
+/* у текста сумма меньше 1 намеренно, между заголовками нужна пауза */
+const SCENE_TIMING = {
   /* мокапы: travel и drift в % высоты мокапа */
   shot: {
     hold: 0.06,
     fade: 0.88, // движение занимает почти весь шаг
-    sharpness: 0.28, // прозрачность меняется на 0.25 шага в середине
+    fadeWidth: 0.28, // прозрачность меняется на 0.25 шага в середине
     drift: 2,
-    /* на пересменке мокапы должны разъехаться почти на свою высоту, иначе
-       два корпуса телефона наезжают друг на друга и кадр читается грязно */
+    /* мокапы разъезжаются почти на свою высоту, иначе корпуса наезжают друг на друга */
     travelOut: 80, // уход вверх
     travelIn: 68, // приход снизу
     moveMix: 0.3, // 0 это линейно, 1 это smoothstep
@@ -41,7 +39,7 @@ export const SCENE_TIMING = {
   text: {
     hold: 0.08,
     fade: 0.38,
-    sharpness: 1,
+    fadeWidth: 1,
     drift: 3,
     travelOut: 54,
     travelIn: 46,
@@ -67,7 +65,7 @@ function sceneLayer(d, spec) {
   const u = clamp((a - spec.hold) / spec.fade, 0, 1)
   const shaped = u + spec.moveMix * (smoothstep(u) - u)
   const move = spec.drift + (travel - spec.drift) * shaped
-  return { dir, u, opacity: 1 - crossfade(u, spec.sharpness), translateY: -dir * move }
+  return { dir, u, opacity: 1 - crossfade(u, spec.fadeWidth), translateY: -dir * move }
 }
 
 function shotScale(layer) {

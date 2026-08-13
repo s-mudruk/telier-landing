@@ -2,44 +2,59 @@ import { useEffect } from 'react'
 import Lenis from 'lenis'
 import { clamp } from './scene-timing.js'
 
-/* Точка входа одна: App импортирует всё из scroll.js */
-export { clamp, smoothstep, SCENE_TIMING, sceneStyle } from './scene-timing.js'
+/* точка входа одна: App импортирует всё из scroll.js */
+export { clamp, sceneStyle } from './scene-timing.js'
 
-/* Один жест колеса или свайпа даёт один переход на следующий экран.
-   Свободной прокрутки нет. rAF-цикл общий: сначала Lenis двигает
-   страницу, потом подписчики пересчитывают свой прогресс. */
+/* один жест колеса или свайпа даёт один переход, свободной прокрутки нет */
+/* скролл живёт в контейнере .snap, документ не скроллится: браузер не может
+   ни сдвинуть страницу сам, ни сломать раскладку пересчётом dvh */
 
 const FRAME_SUBS = new Set()
 
-export const EASE_OUT_EXPO = (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+/* контейнер скролла, ставится в useSmoothScroll; фолбэки на window нужны
+   подписчикам, чей эффект монтируется раньше */
+let SCROLLER = null
 
-/* Кривая перехода между экранами */
-export const EASE_IN_OUT_SINE = (t) => -(Math.cos(Math.PI * t) - 1) / 2
+const scrollTop = () => (SCROLLER ? SCROLLER.scrollTop : window.scrollY)
 
-export function prefersReducedMotion() {
+const viewH = () => (SCROLLER ? SCROLLER.clientHeight : window.innerHeight)
+
+const jumpTo = (y) => {
+  if (SCROLLER) SCROLLER.scrollTop = y
+  else window.scrollTo(0, y)
+}
+
+/* плавный сдвиг контейнера, для подводки плашки к клавиатуре */
+export function nudgeScroll(delta) {
+  SCROLLER?.scrollBy({ top: delta, behavior: 'smooth' })
+}
+
+/* кривая перехода между экранами */
+const EASE_IN_OUT_SINE = (t) => -(Math.cos(Math.PI * t) - 1) / 2
+
+function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/* Подписка на кадр. Возвращает функцию отписки. */
+/* подписка на кадр, возвращает отписку */
 export function onFrame(cb) {
   FRAME_SUBS.add(cb)
   return () => FRAME_SUBS.delete(cb)
 }
 
-/* Прогресс sticky-трека по его элементу. */
+/* прогресс sticky-трека 0..1 */
 export function trackProgress(el) {
   if (!el) return 0
   const rect = el.getBoundingClientRect()
-  const total = rect.height - window.innerHeight
+  const total = rect.height - viewH()
   return total > 0 ? clamp(-rect.top / total, 0, 1) : 0
 }
 
 /* ============ Горизонтальная лента: доводка карточки ============ */
 
-/* Лента листается колесом, свайпом и протяжкой мыши.
-   Доводка карточки в центр работает только на узком экране. */
-export const RAIL = {
+/* лента листается колесом, свайпом и мышью, доводка в центр только на узком экране */
+const RAIL = {
   media: '(max-width: 860px)', // где доводка вообще работает
   idleMs: 110, // тишина в потоке scroll, после которой жест считается законченным
   duration: 0.42, // секунды на доводку
@@ -119,7 +134,7 @@ export function attachRailSnap(el) {
     onScroll()
   }
 
-  /* Протяжка мышью: палец и трекпад листают ленту сами */
+  /* протяжка мышью, палец и трекпад листают ленту сами */
   let drag = null
 
   const onPointerDown = (e) => {
@@ -178,11 +193,11 @@ export function attachRailSnap(el) {
 
 /* ============ Пошаговый скролл: один жест на экран ============ */
 
-export const STOP_SECTION_SELECTOR = '.panel'
-export const STOP_TRACK_SELECTOR = '.product-track'
-export const SCENE_SELECTOR = '.stage-shots img'
+const STOP_SECTION_SELECTOR = '.panel'
+const STOP_TRACK_SELECTOR = '.product-track'
+const SCENE_SELECTOR = '.stage-shots img'
 
-export const STEP = {
+const STEP = {
   baseDuration: 0.95, // секунды на один экран, дальше по корню из дистанции
   minDuration: 0.9,
   maxDuration: 1.3,
@@ -194,36 +209,26 @@ export const STEP = {
   watchdogSlackMs: 350, // запас сторожа поверх длительности перехода
 }
 
-/* Нормализация дельты: строка это 100/6 px, страница это экран */
+/* нормализация дельты: строка это 100/6 px, страница это экран */
 const LINE_HEIGHT = 100 / 6
 function normalizeDelta(event) {
   const mode = event.deltaMode
   if (mode === 1) return { x: event.deltaX * LINE_HEIGHT, y: event.deltaY * LINE_HEIGHT }
-  if (mode === 2) return { x: event.deltaX * window.innerWidth, y: event.deltaY * window.innerHeight }
+  if (mode === 2) return { x: event.deltaX * window.innerWidth, y: event.deltaY * viewH() }
   return { x: event.deltaX, y: event.deltaY }
 }
 
-const SCROLL_KEYS = new Set([
-  'ArrowUp',
-  'ArrowDown',
-  'PageUp',
-  'PageDown',
-  'Home',
-  'End',
-  ' ',
-  'Spacebar',
-])
+const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
 
-const isEditable = (el) =>
+export const isEditable = (el) =>
   !!el?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
 
-/* Жест внутри своего скроллящегося блока отдаём ему.
-   Порог nestedScrollMinPx обязателен: у ленты карточек overflow-y
-   вычисляется в auto, и пара пикселей переполнения без порога съедала
-   колесо на всей секции. */
+/* жест внутри своего скроллера отдаём ему; порог обязателен: у ленты карточек
+   overflow-y вычисляется в auto и пара пикселей переполнения съедала бы колесо */
+/* подъём строго до главного контейнера, сам контейнер жестам не отдаём */
 function insideScrollable(target, dy) {
   let el = target instanceof Element ? target : null
-  while (el && el !== document.body && el !== document.documentElement) {
+  while (el && el !== SCROLLER && el !== document.body && el !== document.documentElement) {
     if (el.hasAttribute?.('data-lenis-prevent')) return true
     const room = el.scrollHeight - el.clientHeight
     if (room >= STEP.nestedScrollMinPx && /auto|scroll/.test(getComputedStyle(el).overflowY)) {
@@ -235,14 +240,15 @@ function insideScrollable(target, dy) {
   return false
 }
 
-/* Остановки: границы секций и центры сцен внутри sticky-трека */
+/* остановки: границы секций и центры сцен внутри sticky-трека */
+/* верх .snap совпадает с верхом окна, иначе все остановки уедут */
 function measureStops(lenis) {
-  const vh = window.innerHeight
+  const vh = viewH()
   const limit = Math.max(
-    typeof lenis?.limit === 'number' ? lenis.limit : document.documentElement.scrollHeight - vh,
+    typeof lenis?.limit === 'number' ? lenis.limit : (SCROLLER ? SCROLLER.scrollHeight : document.documentElement.scrollHeight) - vh,
     0,
   )
-  const scroll = window.scrollY
+  const scroll = scrollTop()
   const stops = []
   const add = (v) => {
     const x = clamp(Math.round(v), 0, limit)
@@ -250,7 +256,6 @@ function measureStops(lenis) {
   }
 
   add(0)
-  add(limit)
   document.querySelectorAll(STOP_SECTION_SELECTOR).forEach((el) => {
     const top = el.getBoundingClientRect().top + scroll
     add(top)
@@ -291,6 +296,27 @@ function createStepScroller(lenis) {
     if (soft && (lenis.isLocked || lenis.isScrolling === 'smooth')) lenis.reset()
   }
 
+  /* ресайз окна, поворот и скролл мимо степпера сбивают позицию с остановки:
+     после затишья мгновенный возврат к ближайшей, клавиатура не считается */
+  let realignTimer = 0
+
+  const realign = () => {
+    if (busy || isEditable(document.activeElement)) return
+    const stops = measureStops(lenis)
+    if (!stops.length) return
+    const y = scrollTop()
+    let best = stops[0]
+    for (const s of stops) if (Math.abs(s - y) < Math.abs(best - y)) best = s
+    if (Math.abs(best - y) <= STEP.tolerancePx) return
+    if (soft) lenis.scrollTo(best, { immediate: true, force: true })
+    else jumpTo(best)
+  }
+
+  const onViewportResize = () => {
+    clearTimeout(realignTimer)
+    realignTimer = setTimeout(realign, 140)
+  }
+
   const finish = () => {
     busy = false
     activeDir = 0
@@ -301,19 +327,19 @@ function createStepScroller(lenis) {
   }
 
   const drive = (target, onComplete) => {
-    const from = window.scrollY
+    const from = scrollTop()
     const distance = Math.abs(target - from)
     if (distance < 1) {
       onComplete?.()
       return
     }
     if (!soft) {
-      window.scrollTo(0, target)
+      jumpTo(target)
       onComplete?.()
       return
     }
     const duration = clamp(
-      STEP.baseDuration * Math.sqrt(distance / window.innerHeight),
+      STEP.baseDuration * Math.sqrt(distance / viewH()),
       STEP.minDuration,
       STEP.maxDuration,
     )
@@ -348,7 +374,7 @@ function createStepScroller(lenis) {
   const move = (dir) => {
     const stops = measureStops(lenis)
     if (!stops.length) return
-    const y = window.scrollY
+    const y = scrollTop()
     if (dir === 'start') return drive(stops[0])
     if (dir === 'end') return drive(stops[stops.length - 1])
     const next =
@@ -433,6 +459,8 @@ function createStepScroller(lenis) {
     if (e.metaKey || e.ctrlKey || e.altKey) return
     if (!SCROLL_KEYS.has(e.key)) return
     if (isEditable(e.target)) return
+    /* пробел на кнопке или ссылке отдаём самому элементу */
+    if (e.key === ' ' && e.target instanceof Element && e.target.closest('button, a[href]')) return
     e.preventDefault()
     if (e.key === 'Home') return request('start')
     if (e.key === 'End') return request('end')
@@ -453,9 +481,12 @@ function createStepScroller(lenis) {
   window.addEventListener('touchcancel', onTouchEnd, passive)
   window.addEventListener('keydown', onKeyDown, active)
   document.addEventListener('visibilitychange', onVisibility)
+  window.addEventListener('resize', onViewportResize)
+  window.visualViewport?.addEventListener('resize', onViewportResize)
+  /* скроллбар и подскроллы браузера идут мимо степпера, затишье возвращает остановку */
+  SCROLLER?.addEventListener('scroll', onViewportResize, { passive: true })
 
-  /* Сторож против вечной блокировки: снимает зависший флаг перехода,
-     зависший lock у Lenis и залипший распознаватель жеста. */
+  /* сторож: снимает зависший переход, lock у lenis и залипший жест */
   const tick = () => {
     const now = performance.now()
     if (busy && now > busyUntil) release()
@@ -467,6 +498,7 @@ function createStepScroller(lenis) {
   }
 
   const destroy = () => {
+    clearTimeout(realignTimer)
     window.removeEventListener('wheel', onWheel, active)
     window.removeEventListener('touchstart', onTouchStart, passive)
     window.removeEventListener('touchmove', onTouchMove, active)
@@ -474,6 +506,9 @@ function createStepScroller(lenis) {
     window.removeEventListener('touchcancel', onTouchEnd, passive)
     window.removeEventListener('keydown', onKeyDown, active)
     document.removeEventListener('visibilitychange', onVisibility)
+    window.removeEventListener('resize', onViewportResize)
+    window.visualViewport?.removeEventListener('resize', onViewportResize)
+    SCROLLER?.removeEventListener('scroll', onViewportResize)
   }
 
   return { tick, destroy, scrollToHero }
@@ -485,22 +520,21 @@ export function scrollToHero(onComplete) {
   scrollApi?.scrollToHero(onComplete)
 }
 
-export function useSmoothScroll() {
+export function useSmoothScroll(wrapperRef) {
   useEffect(() => {
     const soft = !prefersReducedMotion()
     let lenis = null
 
-    if (soft) {
+    const wrapper = wrapperRef?.current
+    SCROLLER = wrapper || null
+
+    /* все scrollTo передают duration и easing явно, поэтому опций плавности нет */
+    if (soft && wrapper) {
       lenis = new Lenis({
-        lerp: 0.09,
-        easing: EASE_OUT_EXPO,
-        smoothWheel: true,
-        wheelMultiplier: 1,
-        touchMultiplier: 1.5,
-        syncTouch: false,
+        wrapper,
+        content: wrapper.firstElementChild,
         autoRaf: false,
-        anchors: true,
-        /* колесо и тач ведёт наш скроллер, Lenis только анимирует */
+        /* колесо и тач ведёт наш скроллер, lenis только анимирует */
         virtualScroll: () => false,
       })
     }
@@ -510,18 +544,27 @@ export function useSmoothScroll() {
     scrollApi = stepper
 
     /* следующий кадр планируем до работы: исключение не убьёт цикл */
+    /* подписчики читают геометрию, будим их только когда позиция или окно менялись */
+    let lastY = -1
+    const wake = () => { lastY = -1 }
+    window.addEventListener('resize', wake)
     let id = requestAnimationFrame(function loop(time) {
       id = requestAnimationFrame(loop)
       if (lenis) lenis.raf(time)
       stepper.tick()
+      const y = scrollTop()
+      if (y === lastY) return
+      lastY = y
       FRAME_SUBS.forEach((cb) => cb())
     })
 
     return () => {
       cancelAnimationFrame(id)
+      window.removeEventListener('resize', wake)
       stepper.destroy()
       if (lenis) lenis.destroy()
       if (scrollApi === stepper) scrollApi = null
+      if (SCROLLER === wrapper) SCROLLER = null
     }
-  }, [])
+  }, [wrapperRef])
 }
