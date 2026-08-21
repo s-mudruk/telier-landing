@@ -81,6 +81,12 @@ a { color: inherit; }
 
 .only-desk { display: inline; }
 
+.only-wide { display: none; }
+
+@media (min-width: 1440px) {
+  .only-wide { display: inline; }
+}
+
 /* неразрывная группа слов, для ручного управления переносами */
 .nw { white-space: nowrap; }
 
@@ -567,6 +573,12 @@ a { color: inherit; }
   transform: none;
 }
 
+@media (min-width: 1440px) {
+  .practice-claim { max-width: none; }
+
+  .practice-support { max-width: 660px; }
+}
+
 /* ============ 03d Сервисы бенто ============ */
 /* сетка из макета сервисы гостя ячейками, еда тёплым акцентом,
    отельная ячейка тёмная и широкая */
@@ -581,7 +593,6 @@ a { color: inherit; }
   line-height: 1.08;
   letter-spacing: -0.01em;
   margin-bottom: clamp(32px, calc(var(--app-h, 100dvh) * 0.045), 48px);
-  max-width: 560px;
   text-wrap: balance;
 }
 
@@ -590,7 +601,6 @@ a { color: inherit; }
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: clamp(88px, calc(var(--app-h, 100dvh) * 0.14), 128px);
   gap: 12px;
-  max-width: 1112px;
 }
 
 /* иконка сверху, имя у нижней кромки, между ними воздух ячейки */
@@ -749,6 +759,8 @@ a { color: inherit; }
   object-fit: contain;
   mix-blend-mode: multiply;
 }
+
+.usp-ill img[src*='usp-pie'] { width: min(66%, calc(var(--usp-card) * 0.52)); }
 
 /* кегль привязан к карточке, отступы по сетке 8 */
 .usp-col b {
@@ -1092,8 +1104,8 @@ a { color: inherit; }
   .practice-support { margin-top: 24px; font-size: 16px; line-height: 25px; }
 
   /* 03d Сервисы бенто */
-  /* 30 вместо 32 строка «Всё, что нужно гостю,» влезает целиком, без висячего слова */
-  .services-title { font-size: 30px; line-height: 32px; margin-bottom: 36px; max-width: 342px; }
+  /* 28 вместо 32 строка «Всё, что нужно гостю,» влезает целиком, без висячего слова */
+  .services-title { font-size: 28px; line-height: 32px; margin-bottom: 36px; max-width: 342px; }
 
   /* сетка уступает встречным строкам */
   .bento { display: none; }

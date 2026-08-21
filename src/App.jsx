@@ -115,7 +115,6 @@ const USP = [
   {
     ill: 'usp-pie',
     t: 'Оплата только',
-    /* t2 уходит на вторую строку принудительно, но только на мобилке */
     t2: 'с транзакций',
     d: 'Без абонентской платы и скрытых платежей. Только 5% от заказов через приложение. Мы заинтересованы в вашем доходе.',
   },
@@ -497,7 +496,7 @@ function ProductSticky() {
           <div className="stage-text">
             {SCENES.map((s, d) => (
               <div className="stage-caption" key={s.title} ref={(el) => (capRefs.current[d] = el)}>
-                <h2>{s.title}</h2>
+                <h2>{typo(s.title)}</h2>
                 <p>{typo(s.desc)}</p>
               </div>
             ))}
@@ -567,9 +566,11 @@ function Practice() {
       <div className="container">
         <p className="practice-label">{typo('Мировая практика говорит сама за себя')}</p>
         <h2 className="practice-claim">
-          {typo('Консьерж в приложении приносит отелю')}{' '}
+          {typo('Консьерж в приложении приносит')}
+          <br className="only-wide" /> {typo('отелю')}{' '}
           <span className="practice-accent">{typo('до 25%')}</span>{' '}
-          {typo('к продажам допуслуг, растит NPS и возврат гостей')}
+          {typo('к продажам допуслуг,')}
+          <br className="only-wide" /> {typo('растит NPS и возврат гостей')}
         </h2>
         <p className="practice-support">
           {typo('Гости отелей 4 и 5 звёзд готовы заказывать допуслуги, но')}{' '}
@@ -604,7 +605,10 @@ function Services() {
   return (
     <section ref={ref} className={`panel services${inView ? ' in-view' : ''}`}>
       <div className="container">
-        <h2 className="services-title">{typo('Всё, что нужно гостю, в одном приложении')}</h2>
+        <h2 className="services-title">
+          {typo('Всё, что нужно гостю, в одном')}
+          <br className="only-desk" /> {typo('приложении и едином стиле')}
+        </h2>
         <div className="bento">
           {BENTO.map((c, i) => (
             <BentoCell cell={c} i={i} key={c.t} />
@@ -661,7 +665,7 @@ function Hotel() {
                     {typo(u.t)}
                     {u.t2 && (
                       <>
-                        <br className="only-mob" /> {typo(u.t2)}
+                        <br /> {typo(u.t2)}
                       </>
                     )}
                   </b>
