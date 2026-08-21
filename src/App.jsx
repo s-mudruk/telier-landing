@@ -124,9 +124,9 @@ const USP = [
    icon это имя файла в assets/icons, отельная ячейка тёмная */
 const BENTO = [
   { t: 'Заказ еды', icon: 'food', mod: 'accent' },
-  { t: 'Пополнение минибара', icon: 'minibar' },
+  { t: 'Пополнение минибара', icon: 'coffee' },
   { t: 'Спа и массаж', icon: 'spa' },
-  { t: 'Трансфер', icon: 'transfer' },
+  { t: 'Трансфер', icon: 'route' },
   { t: 'Уборка и стирка', icon: 'laundry' },
   { t: 'Бронирование стола', icon: 'table' },
   { t: 'Открытие номера', icon: 'key' },
@@ -566,10 +566,10 @@ function Practice() {
       <div className="container">
         <p className="practice-label">{typo('Мировая практика говорит сама за себя')}</p>
         <h2 className="practice-claim">
-          {typo('Консьерж в приложении приносит')}
+          {typo('Консьерж в приложении приносит', false)}
           <br className="only-wide" /> {typo('отелю')}{' '}
           <span className="practice-accent">{typo('до 25%')}</span>{' '}
-          {typo('к продажам допуслуг,')}
+          {typo('к продажам допуслуг,', false)}
           <br className="only-wide" /> {typo('растит NPS и возврат гостей')}
         </h2>
         <p className="practice-support">
@@ -746,8 +746,40 @@ const CursorMark = () => (
   </svg>
 )
 
+function FooterSparks() {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const host = ref.current
+    if (!host || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const id = setInterval(() => {
+      const s = document.createElement('span')
+      const a = Math.random() * Math.PI * 2
+      const r = 90 + Math.random() * 40
+      s.style.left = `calc(50% + ${Math.round(Math.cos(a) * 70)}px)`
+      s.style.top = `calc(50% + ${Math.round(Math.sin(a) * 20)}px)`
+      s.style.setProperty('--dx', `${Math.round(Math.cos(a) * r)}px`)
+      s.style.setProperty('--dy', `${Math.round(Math.sin(a) * r * 0.6)}px`)
+      host.appendChild(s)
+      setTimeout(() => s.remove(), 1700)
+    }, 220)
+    return () => clearInterval(id)
+  }, [])
+
+  return <div className="footer-sparks" ref={ref} aria-hidden="true" />
+}
+
 function Footer({ footerRef, onDemoClick }) {
   const sheetRef = useRef(null)
+  const [mob, setMob] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)')
+    const apply = () => setMob(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   useEffect(() => {
     const sheet = sheetRef.current
@@ -787,6 +819,7 @@ function Footer({ footerRef, onDemoClick }) {
               </span>
             </h2>
             <div className="footer-cta-slot">
+              {mob && <FooterSparks />}
               <Cta className="footer-cta" onClick={onDemoClick}>Заказать демо</Cta>
             </div>
           </div>
