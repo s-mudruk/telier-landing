@@ -1,4 +1,4 @@
-/* тайминг sticky-сцены продукта: одна сцена на один жест скролла */
+/* тайминг sticky-сцены продукта одна сцена на один жест скролла */
 
 export function clamp(v, min, max) {
   return v < min ? min : v > max ? max : v
@@ -18,10 +18,10 @@ const round = (v, digits) => {
 /* ============ Тайминг sticky-сцены продукта ============ */
 
 /* единица это шаг между центрами соседних сцен, он же один жест */
-/* инвариант мокапов: 2*hold + fade === 1, иначе провал в пустой кадр на пересменке */
+/* инвариант мокапов 2*hold + fade === 1, иначе провал в пустой кадр на пересменке */
 /* у текста сумма меньше 1 намеренно, между заголовками нужна пауза */
 const SCENE_TIMING = {
-  /* мокапы: travel и drift в % высоты мокапа */
+  /* мокапы travel и drift в % высоты мокапа */
   shot: {
     hold: 0.06,
     fade: 0.88, // движение занимает почти весь шаг
@@ -35,7 +35,7 @@ const SCENE_TIMING = {
     scaleIn: 0.93,
     scalePower: 2,
   },
-  /* подписи: travel и drift в px */
+  /* подписи travel и drift в px */
   text: {
     hold: 0.08,
     fade: 0.38,
@@ -47,18 +47,18 @@ const SCENE_TIMING = {
   },
 }
 
-/* комплементарная кривая: g(1-u) === 1 - g(u) при любом width */
+/* комплементарная кривая g(1-u) === 1 - g(u) при любом width */
 function crossfade(u, width) {
   return smoothstep((u - 0.5) / width + 0.5)
 }
 
-/* d это расстояние до центра в шагах: >0 сцена улетела вверх, <0 ждёт снизу */
+/* d это расстояние до центра в шагах >0 сцена улетела вверх, <0 ждёт снизу */
 function sceneLayer(d, spec) {
   const dir = d < 0 ? -1 : 1
   const a = Math.min(Math.abs(d), 1)
   const travel = dir > 0 ? spec.travelOut : spec.travelIn
   if (a <= spec.hold) {
-    /* полка у центра: сцена стоит на месте в точке остановки */
+    /* полка у центра сцена стоит на месте в точке остановки */
     const move = spec.drift * (spec.hold > 0 ? a / spec.hold : 0)
     return { dir, u: 0, opacity: 1, translateY: -dir * move }
   }
@@ -75,7 +75,7 @@ function shotScale(layer) {
   return 1 - (1 - target) * (1 - Math.pow(1 - layer.u, spec.scalePower))
 }
 
-/* p это прогресс трека 0..1. translateY мокапа в % высоты, подписи в px. */
+/* p это прогресс трека 0..1. translateY мокапа в % высоты, подписи в px, */
 export function sceneStyle(p, index, total) {
   const t = 0.5 + clamp(p, 0, 1) * (total - 1)
   const d = t - (index + 0.5)

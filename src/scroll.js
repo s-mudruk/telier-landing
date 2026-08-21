@@ -2,16 +2,16 @@ import { useEffect } from 'react'
 import Lenis from 'lenis'
 import { clamp } from './scene-timing.js'
 
-/* точка входа одна: App импортирует всё из scroll.js */
+/* точка входа одна App импортирует всё из scroll.js */
 export { clamp, sceneStyle } from './scene-timing.js'
 
 /* один жест колеса или свайпа даёт один переход, свободной прокрутки нет */
-/* скролл живёт в контейнере .snap, документ не скроллится: браузер не может
+/* скролл живёт в контейнере .snap, документ не скроллится браузер не может
    ни сдвинуть страницу сам, ни сломать раскладку пересчётом dvh */
 
 const FRAME_SUBS = new Set()
 
-/* контейнер скролла, ставится в useSmoothScroll; фолбэки на window нужны
+/* контейнер скролла, ставится в useSmoothScroll, фолбэки на window нужны
    подписчикам, чей эффект монтируется раньше */
 let SCROLLER = null
 
@@ -51,7 +51,7 @@ export function trackProgress(el) {
   return total > 0 ? clamp(-rect.top / total, 0, 1) : 0
 }
 
-/* ============ Горизонтальная лента: доводка карточки ============ */
+/* ============ Горизонтальная лента доводка карточки ============ */
 
 /* лента листается колесом, свайпом и мышью, доводка в центр только на узком экране */
 const RAIL = {
@@ -68,23 +68,23 @@ export function attachRailSnap(el) {
   const soft = !prefersReducedMotion()
   let idle = 0
   let raf = 0
-  let held = false /* палец на ленте: пока не отпустил, не доводим */
+  let held = false /* палец на ленте пока не отпустил, не доводим */
 
   const stop = () => {
     if (raf) cancelAnimationFrame(raf)
     raf = 0
   }
 
-  /* ближайшая точка покоя */
+  /* ближайшая точка покоя карточка у левой линии, следующая выглядывает справа */
   const target = () => {
     const cards = el.children
     if (!cards.length || !window.matchMedia(RAIL.media).matches) return null
     const max = Math.max(el.scrollWidth - el.clientWidth, 0)
+    const base = el.getBoundingClientRect().left + (parseFloat(getComputedStyle(el).paddingLeft) || 0)
     let best = null
     let bestGap = Infinity
     for (const card of cards) {
-      const want = card.offsetLeft + card.offsetWidth / 2 - el.clientWidth / 2
-      const pos = clamp(want, 0, max)
+      const pos = clamp(el.scrollLeft + card.getBoundingClientRect().left - base, 0, max)
       const gap = Math.abs(pos - el.scrollLeft)
       if (gap < bestGap) {
         bestGap = gap
@@ -191,7 +191,7 @@ export function attachRailSnap(el) {
   }
 }
 
-/* ============ Пошаговый скролл: один жест на экран ============ */
+/* ============ Пошаговый скролл один жест на экран ============ */
 
 const STOP_SECTION_SELECTOR = '.panel'
 const STOP_TRACK_SELECTOR = '.product-track'
@@ -209,7 +209,7 @@ const STEP = {
   watchdogSlackMs: 350, // запас сторожа поверх длительности перехода
 }
 
-/* нормализация дельты: строка это 100/6 px, страница это экран */
+/* нормализация дельты строка это 100/6 px, страница это экран */
 const LINE_HEIGHT = 100 / 6
 function normalizeDelta(event) {
   const mode = event.deltaMode
@@ -223,7 +223,7 @@ const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home
 export const isEditable = (el) =>
   !!el?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
 
-/* жест внутри своего скроллера отдаём ему; порог обязателен: у ленты карточек
+/* жест внутри своего скроллера отдаём ему, порог обязателен у ленты карточек
    overflow-y вычисляется в auto и пара пикселей переполнения съедала бы колесо */
 /* подъём строго до главного контейнера, сам контейнер жестам не отдаём */
 function insideScrollable(target, dy) {
@@ -240,7 +240,7 @@ function insideScrollable(target, dy) {
   return false
 }
 
-/* остановки: границы секций и центры сцен внутри sticky-трека */
+/* остановки границы секций и центры сцен внутри sticky-трека */
 /* верх .snap совпадает с верхом окна, иначе все остановки уедут */
 function measureStops(lenis) {
   const vh = viewH()
@@ -345,7 +345,7 @@ function createStepScroller(lenis) {
     )
     busy = true
     activeDir = target > from ? 1 : -1
-    /* потолок жизни флага: если анимация не доиграет, снимет tick */
+    /* потолок жизни флага если анимация не доиграет, снимет tick */
     busyUntil = performance.now() + duration * 1000 + STEP.watchdogSlackMs
     lenis.scrollTo(target, {
       duration,
@@ -370,7 +370,7 @@ function createStepScroller(lenis) {
     drive(stops[0], onComplete)
   }
 
-  /* dir: 1 вниз, -1 вверх, 'start' и 'end' в начало и в конец страницы */
+  /* dir 1 вниз, -1 вверх, 'start' и 'end' в начало и в конец страницы */
   const move = (dir) => {
     const stops = measureStops(lenis)
     if (!stops.length) return
@@ -391,7 +391,7 @@ function createStepScroller(lenis) {
       return move(dir)
     }
     if (busy) {
-      /* разворот на середине: рвём анимацию и едем в новую сторону */
+      /* разворот на середине рвём анимацию и едем в новую сторону */
       if (dir !== activeDir) {
         release()
         return move(dir)
@@ -486,7 +486,7 @@ function createStepScroller(lenis) {
   /* скроллбар и подскроллы браузера идут мимо степпера, затишье возвращает остановку */
   SCROLLER?.addEventListener('scroll', onViewportResize, { passive: true })
 
-  /* сторож: снимает зависший переход, lock у lenis и залипший жест */
+  /* сторож снимает зависший переход, lock у lenis и залипший жест */
   const tick = () => {
     const now = performance.now()
     if (busy && now > busyUntil) release()
@@ -543,7 +543,7 @@ export function useSmoothScroll(wrapperRef) {
     const stepper = createStepScroller(lenis)
     scrollApi = stepper
 
-    /* следующий кадр планируем до работы: исключение не убьёт цикл */
+    /* следующий кадр планируем до работы исключение не убьёт цикл */
     /* подписчики читают геометрию, будим их только когда позиция или окно менялись */
     let lastY = -1
     const wake = () => { lastY = -1 }

@@ -25,10 +25,10 @@
 
   --container: 1160px;
 
-  /* кадр hero и футера: до 1440 равен окну, дальше растёт медленнее и замирает на 1800 */
+  /* кадр hero и футера до 1440 равен окну, дальше растёт медленнее и замирает на 1800 */
   --frame: min(100vw, clamp(1440px, 720px + 50vw, 1800px));
 
-  /* левая линия сетки: до 1440 край контейнера, дальше гуттер кадра, на 1440 обе дают 164 */
+  /* левая линия сетки до 1440 край контейнера, дальше гуттер кадра, на 1440 обе дают 164 */
   --edge: max(24px, calc((100vw - var(--container)) / 2 + 24px));
 }
 
@@ -37,10 +37,10 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-/* фон и на html, и на body: новый safari красит статус-бар по фону страницы */
+/* фон и на html, и на body новый safari красит статус-бар по фону страницы */
 html, body { height: 100%; overflow: hidden; background: var(--bg-canvas); }
 
-/* цвет статус-бара всегда канвас: webkit сэмплирует fixed-элементы у верхней
+/* цвет статус-бара всегда канвас webkit сэмплирует fixed-элементы у верхней
    кромки, без этой полосы белый футер перекрашивает бар */
 body::before {
   content: '';
@@ -79,9 +79,14 @@ a { color: inherit; }
 
 .only-mob { display: none; }
 
+.only-desk { display: inline; }
+
+/* неразрывная группа слов, для ручного управления переносами */
+.nw { white-space: nowrap; }
+
 /* ============ Скролл ============ */
-/* единственный скроллер страницы, инерция на lenis, css-снап не возвращать: рывки */
-/* скроллбар спрятан: шаги ведёт степпер, а гуттер скроллбара сдвинул бы сетку от 100vw */
+/* единственный скроллер страницы, инерция на lenis, css-снап не возвращать рывки */
+/* скроллбар спрятан шаги ведёт степпер, а гуттер скроллбара сдвинул бы сетку от 100vw */
 .snap {
   height: 100%;
   overflow-y: auto;
@@ -111,7 +116,7 @@ a { color: inherit; }
   * { animation: none !important; transition: none !important; }
 }
 
-/* ============ Хэдер: перетекание из hero ============ */
+/* ============ Хэдер перетекание из hero ============ */
 .header {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -122,7 +127,7 @@ a { color: inherit; }
 
 .header.hidden { opacity: 0; transform: translateY(-8px); pointer-events: none; }
 
-/* шапка стоит на линии сетки, а не в контейнере: на широких экранах совпадает с hero */
+/* шапка стоит на линии сетки, а не в контейнере на широких экранах совпадает с hero */
 .header .container { max-width: none; padding: 0 var(--edge); }
 
 .header-row { display: flex; align-items: center; justify-content: space-between; }
@@ -188,7 +193,7 @@ a { color: inherit; }
   .hero-grid { max-width: calc(var(--frame) - 280px); }
 }
 
-/* 600 из макета: перенос заголовка без наезда на руку */
+/* 600 из макета перенос заголовка без наезда на руку */
 .hero-copy { max-width: clamp(600px, 41.67vw, 700px); }
 
 .hero-logo {
@@ -340,7 +345,7 @@ a { color: inherit; }
 /* numberflow рисует бокс в 1.5 кегля, компенсируем паддингом снизу */
 .numbers { align-items: center; text-align: center; padding-bottom: 36px; }
 
-/* вложенный clamp: после 1440 потолок сам растёт и замирает, вид на 1440 не меняется */
+/* вложенный clamp после 1440 потолок сам растёт и замирает, вид на 1440 не меняется */
 .metric-big {
   font-family: var(--font-display);
   font-weight: 700;
@@ -352,7 +357,7 @@ a { color: inherit; }
 }
 
 .metric-label {
-  margin-top: 8px;
+  margin-top: 12px;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: clamp(24px, 1.667vw, 28px);
@@ -362,7 +367,7 @@ a { color: inherit; }
   animation: rise 0.5s cubic-bezier(0.3, 0, 0.2, 1);
 }
 
-/* ============ 03 Продукт: sticky ============ */
+/* ============ 03 Продукт sticky ============ */
 /* 6.4 экрана на 4 сцены, менять вместе со SCENES в App.jsx */
 .product-track {
   height: calc(var(--app-h, 100dvh) * 6.4);
@@ -439,11 +444,212 @@ a { color: inherit; }
   will-change: transform, opacity;
 }
 
+/* ============ 03b Манифест ============ */
+/* split reveal строка это маска, слова выезжают снизу с лёгким поворотом,
+   уход назад без каскада и быстрее */
+.statement {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* в два с половиной раза меньше кегля цифр, вложенный clamp по той же схеме */
+.statement-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 4.2vw, clamp(56px, 4vw, 64px));
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+/* паддинг с обратным полем оставляет выносные элементы внутри маски */
+.st-line {
+  display: block;
+  overflow: hidden;
+  padding: 0.12em 0;
+  margin: -0.12em 0;
+}
+
+.st-line.st-muted { color: var(--ink-muted); }
+
+
+.st-word {
+  display: inline-block;
+  margin: 0 0.12em;
+  opacity: 0;
+  transform: translateY(115%) rotate(2.2deg);
+  transform-origin: 0 100%;
+  transition: transform 0.45s cubic-bezier(0.6, 0, 0.4, 1), opacity 0.25s ease;
+}
+
+.statement.in-view .st-word {
+  opacity: 1;
+  transform: none;
+  transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  transition-delay: calc(var(--d) * 0.055s);
+}
+
+.statement-note {
+  margin-top: clamp(28px, calc(var(--app-h, 100dvh) * 0.05), 40px);
+  font-size: clamp(15px, 1.18vw, 18px);
+  line-height: 1.5;
+  color: var(--ink-3);
+  max-width: min(520px, 100%);
+  text-wrap: balance;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.statement.in-view .statement-note {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: calc(var(--d) * 0.055s + 0.2s);
+}
+
+/* ============ 03c Практика ============ */
+/* проблема со страницы 3 макета и мировые цифры связка перед бенто,
+   блок стоит на линии сетки, секцию называет подпись над выжимкой */
+.practice { justify-content: center; }
+
+.practice .container { max-width: none; padding-left: var(--edge); padding-right: var(--edge); }
+
+/* подпись, крупная выжимка исследований, короткая строка проблемы */
+.practice-label {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 23px;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.practice-claim {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 3.4vw, clamp(44px, 3vw, 52px));
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  max-width: 880px;
+  text-wrap: balance;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition-delay: 0.1s;
+}
+
+/* цифра тем же акцентом, что и большие числа сайта */
+.practice-accent { color: var(--accent); }
+
+.practice-support {
+  margin-top: clamp(28px, calc(var(--app-h, 100dvh) * 0.045), 40px);
+  font-size: clamp(15px, 1.18vw, 17px);
+  line-height: 1.55;
+  color: var(--ink-3);
+  max-width: 560px;
+  text-wrap: pretty;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition-delay: 0.22s;
+}
+
+.practice.in-view .practice-label,
+.practice.in-view .practice-claim,
+.practice.in-view .practice-support {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============ 03d Сервисы бенто ============ */
+/* сетка из макета сервисы гостя ячейками, еда тёплым акцентом,
+   отельная ячейка тёмная и широкая */
+.services { justify-content: center; }
+
+.services .container { max-width: none; padding-left: var(--edge); padding-right: var(--edge); }
+
+.services-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 2.6vw, clamp(36px, 2.5vw, 40px));
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin-bottom: clamp(32px, calc(var(--app-h, 100dvh) * 0.045), 48px);
+  max-width: 560px;
+  text-wrap: balance;
+}
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(88px, calc(var(--app-h, 100dvh) * 0.14), 128px);
+  gap: 12px;
+  max-width: 1112px;
+}
+
+/* иконка сверху, имя у нижней кромки, между ними воздух ячейки */
+.bento-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--bg-card);
+  border: 1px solid rgba(19, 19, 19, 0.06);
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+/* каскадное появление только у десктопной сетки, ленты живут без ревила */
+.bento .bento-cell {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition-delay: calc(var(--i, 0) * 0.04s);
+}
+
+.services.in-view .bento .bento-cell { opacity: 1; transform: none; }
+
+.bento-icon { width: clamp(22px, 1.8vw, 26px); height: auto; }
+
+.bento-cell b {
+  font-weight: 600;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.3;
+}
+
+/* заказ еды это главный сценарий, ячейка тёплая */
+.bento-cell--accent { background: var(--accent-soft); border-color: transparent; }
+
+/* отельная ячейка тёмная, статусный акцент в конце сетки */
+.bento-cell--hotel {
+  grid-column: span 2;
+  background: var(--ink);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* иконка на тёмном белая */
+.bento-cell--hotel .bento-icon { filter: invert(1); }
+
+/* встречные строки живут только на мобилке */
+.bento-rows { display: none; }
+
+@keyframes bento-run {
+  to { transform: translateX(-50%); }
+}
+
+
 /* ============ 04 Преимущества ============ */
-/* бюджет вертикали: top + 40 + 48 + card + 24 + 92 + bottom = высота экрана, плавает только карточка */
+/* бюджет вертикали top + 40 + 48 + card + bottom = высота экрана, плавает только карточка */
 .hotel { justify-content: flex-start; }
 
-/* секция стоит на линии сетки: лента через 50%−50vw сама дотягивается до кромок */
+/* секция стоит на линии сетки лента через 50%−50vw сама дотягивается до кромок */
 .hotel .container { max-width: none; padding-left: var(--edge); padding-right: var(--edge); }
 
 .hotel-inner {
@@ -453,12 +659,11 @@ a { color: inherit; }
   --usp-bottom: clamp(24px, calc(var(--app-h, 100dvh) * 0.23 - 123px), 84px);
   --usp-title: 40px;
   --usp-gap-title: 48px;
-  --usp-gap-media: 24px;
-  --usp-text: 92px;
+  /* текст переехал внутрь карточки, ей уходит весь остаток бюджета 548 при 900 */
   --usp-card: clamp(
-    200px,
-    calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
-    clamp(432px, 30vw, 500px)
+    320px,
+    calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title)),
+    548px
   );
 
   height: 100%;
@@ -477,9 +682,10 @@ a { color: inherit; }
 .hotel-title {
   font-family: var(--font-display);
   font-weight: 700;
-  /* потолок 40 равен строке --usp-title, иначе на очень широких кегль вылезает из бюджета */
+  /* потолок 40 бьётся со строкой бюджета --usp-title, иначе кегль вылезает из бюджета */
   font-size: clamp(24px, 2.6vw, clamp(36px, 2.5vw, 40px));
-  line-height: var(--usp-title);
+  /* относительный интерлиньяж на узком десктопе кегль 24 и фикс 40px рвал строку */
+  line-height: 1.08;
   letter-spacing: -0.01em;
   margin-bottom: var(--usp-gap-title);
 }
@@ -510,33 +716,53 @@ a { color: inherit; }
 .usp-col {
   display: flex;
   flex-direction: column;
-  flex: 0 0 clamp(260px, var(--usp-card), 500px);
+  flex: 0 0 clamp(300px, calc(var(--usp-card) * 0.82), 460px);
 }
 
-.usp-media {
-  width: 100%;
+/* иконка сверху, текст прижат к низу, между ними воздух карточки */
+/* текст всегда у нижней кромки, иллюстрация забирает остаток высоты */
+.usp-card {
   height: var(--usp-card);
-  background: var(--bg-media);
-  border-radius: clamp(20px, calc(var(--usp-card) * 0.0788), 32px);
-  margin-bottom: var(--usp-gap-media);
-  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--bg-card);
+  border: 1px solid rgba(19, 19, 19, 0.06);
+  border-radius: clamp(24px, calc(var(--usp-card) * 0.058), 32px);
+  padding: clamp(20px, calc(var(--usp-card) * 0.05), 28px);
 }
 
-.usp-text { min-height: var(--usp-text); }
+/* иллюстрация занимает верх карточки, центр по обеим осям, текст не задевает */
+.usp-ill {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
 
-/* кегль привязан к карточке, на низком окне текст остаётся в 92px */
+/* бумажный фон картинки растворяется в белой карточке через multiply */
+.usp-ill img {
+  width: min(78%, calc(var(--usp-card) * 0.62));
+  max-height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+/* кегль привязан к карточке, отступы по сетке 8 */
 .usp-col b {
   display: block;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(19px, calc(var(--usp-card) * 0.0602), 26px);
-  line-height: 1.29;
-  margin-bottom: 4px;
+  line-height: 1.3;
+  margin-bottom: 8px;
 }
 
 .usp-col p {
   font-size: clamp(15px, calc(var(--usp-card) * 0.0417), 18px);
-  line-height: 1.35;
+  line-height: 1.4;
   color: var(--ink-3);
   max-width: min(370px, 100%);
 }
@@ -549,6 +775,71 @@ a { color: inherit; }
 }
 
 .hotel.in-view .usp-col { opacity: 1; transform: none; }
+
+/* ============ 04b Роли ============ */
+/* экран живёт на сплит-ревиле манифеста, под заголовком две карточки сути */
+.roles-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: min(760px, 100%);
+  margin-top: clamp(36px, calc(var(--app-h, 100dvh) * 0.06), 56px);
+  text-align: left;
+}
+
+.roles-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(19, 19, 19, 0.06);
+  border-radius: 20px;
+  padding: 22px 24px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.statement.in-view .roles-card {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: calc(0.5s + var(--i, 0) * 0.1s);
+}
+
+.roles-card-who {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 21px;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+
+.roles-card p {
+  font-size: clamp(15px, 1.18vw, 17px);
+  line-height: 1.5;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* подробный текст активной карточки только мобилка */
+.roles-detail { display: none; }
+
+/* хвост первой строки на десктопе точка, на мобилке многоточие-продолжение */
+.roles .st-line:first-child .st-word:last-child::after { content: '.'; }
+
+/* наведение на карточку гасит несвязанную строку заголовка,
+   в покое весь заголовок чернилами */
+@media (hover: hover) {
+  .roles .st-line { transition: color 0.35s ease; }
+
+  .roles .roles-card { transition: border-color 0.25s ease; }
+
+  .roles .roles-card:hover { border-color: rgba(19, 19, 19, 0.16); }
+
+  .roles:has(.roles-card:first-child:hover) .st-line:nth-child(2),
+  .roles:has(.roles-card:last-child:hover) .st-line:first-child {
+    color: var(--ink-muted);
+  }
+}
 
 /* ============ 05 / 06 Футер ============ */
 .footer { justify-content: flex-start; background: var(--bg-canvas); }
@@ -673,6 +964,21 @@ a { color: inherit; }
 @media (max-width: 860px) {
   .only-mob { display: inline; }
 
+  .only-desk { display: none; }
+
+  /* хедер кнопка контуром и на размер меньше, залитая перевешивала логотип */
+  .header .btn-start {
+    padding: 8px 15px;
+    font-size: 14px;
+    line-height: 18px;
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+  }
+
+  .header .btn-start:hover { background: transparent; }
+  .header .btn-start:active { background: rgba(19, 19, 19, 0.08); }
+
   /* 01 Hero */
   .hero { justify-content: flex-start; }
 
@@ -715,12 +1021,12 @@ a { color: inherit; }
   .lead-pill .btn-start { padding-left: 16px; padding-right: 16px; }
 
   /* 02 Цифры */
-  /* без десктопной компенсации: на мобильном кегле бокс numberflow симметричен,
+  /* без десктопной компенсации на мобильном кегле бокс numberflow симметричен,
      паддинг уводил блок выше центра */
   .numbers { padding-bottom: 0; }
 
   .metric-big { font-size: 96px; }
-  .metric-label { font-size: 19px; line-height: 25px; font-weight: 700; max-width: 326px; margin-top: 2px; }
+  .metric-label { font-size: 19px; line-height: 26px; font-weight: 700; max-width: 326px; margin-top: 8px; }
 
   /* 03 Продукт */
   /* 70 держит контент под шапкой, зазор сверху равен зазору снизу */
@@ -749,29 +1055,162 @@ a { color: inherit; }
     height: min(calc(var(--app-h, 100dvh) * 0.6), 506px);
   }
 
-  /* бюджет: top + 64 + 48 + card + 19 + 78 + bottom = высота экрана, при 844 карточка 318 */
+  /* бюджет top + 68 + 40 + card + bottom = высота экрана, при 844 карточка 460 */
   .hotel-inner {
-    /* 293 при высоте 844, на низких экранах меньше, иначе подписи ломаются */
-    --usp-top: clamp(96px, calc(var(--app-h, 100dvh) * 0.63 - 238.8px), 293px);
+    /* 252 при высоте 844, на низких экранах первым сжимается верхний отступ */
+    --usp-top: clamp(84px, calc(var(--app-h, 100dvh) * 0.63 - 279.7px), 252px);
     --usp-bottom: calc(16px + max(8px, env(safe-area-inset-bottom, 0px)));
-    --usp-title: 64px;
-    --usp-gap-title: 48px;
-    --usp-gap-media: 19px;
-    --usp-text: 78px;
+    --usp-title: 68px;
+    --usp-gap-title: 40px;
     --usp-card: clamp(
-      180px,
-      calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title) - var(--usp-gap-media) - var(--usp-text)),
-      318px
+      280px,
+      calc(var(--app-h, 100dvh) - var(--usp-top) - var(--usp-bottom) - var(--usp-title) - var(--usp-gap-title)),
+      460px
     );
   }
 
-  .hotel-title { font-size: 32px; line-height: 32px; max-width: 342px; }
+  .hotel-title { font-size: 32px; line-height: 34px; max-width: 342px; }
 
-  .usp-row { gap: 28px; }
+  .usp-row { gap: 16px; }
 
-  .usp-col { flex: 0 0 clamp(240px, var(--usp-card), 318px); }
-  .usp-col b { font-size: clamp(17px, calc(var(--usp-card) * 0.0629), 20px); line-height: 1.28; margin-bottom: 4px; }
-  .usp-col p { font-size: clamp(14px, calc(var(--usp-card) * 0.0503), 16px); line-height: 1.32; max-width: min(300px, 100%); }
+  /* карточка на всю ширину минус край следующей 24 паддинг + 16 гэп + 28 видно */
+  .usp-col { flex: 0 0 min(calc(100vw - 68px), 420px); }
+  .usp-col b { font-size: clamp(17px, calc(var(--usp-card) * 0.05), 20px); line-height: 1.3; margin-bottom: 8px; }
+  .usp-col p { font-size: clamp(14px, calc(var(--usp-card) * 0.04), 16px); line-height: 1.4; max-width: min(300px, 100%); }
+
+  .usp-card { border-radius: 28px; padding: 20px; }
+
+  /* 03c Практика */
+  /* весь текстовый блок прижат к низу, отступ как у карточек */
+  .practice {
+    justify-content: flex-end;
+    padding-bottom: calc(16px + max(8px, env(safe-area-inset-bottom, 0px)));
+  }
+
+  .practice-label { font-size: 15px; line-height: 20px; margin-bottom: 12px; }
+  .practice-claim { font-size: 30px; line-height: 34px; }
+  .practice-support { margin-top: 24px; font-size: 16px; line-height: 25px; }
+
+  /* 03d Сервисы бенто */
+  /* 30 вместо 32 строка «Всё, что нужно гостю,» влезает целиком, без висячего слова */
+  .services-title { font-size: 30px; line-height: 32px; margin-bottom: 36px; max-width: 342px; }
+
+  /* сетка уступает встречным строкам */
+  .bento { display: none; }
+
+  /* иконка в строку с именем, имя не переносится, кегль и паддинги
+     на размер крупнее сетки, чипы читаются с расстояния */
+  .bento-cell {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    border-radius: 20px;
+    padding: 16px 20px;
+  }
+  .bento-icon { width: 24px; flex: none; }
+  .bento-cell b { font-size: 16px; line-height: 1.25; white-space: nowrap; }
+
+  /* две бесконечные строки чипов навстречу друг другу, цикл бесшовный:
+     в строке две копии набора, сдвиг ровно на половину полотна;
+     края растворяются маской, касание ставит движение на паузу */
+  .bento-rows {
+    display: block;
+    margin: 0 calc(50% - 50vw);
+    touch-action: pan-y;
+  }
+
+  /* маска на каждой строке отдельно */
+  .bento-marq {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  }
+
+  .bento-marq + .bento-marq { margin-top: 14px; }
+
+  .bento-run {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: bento-run 30s linear infinite;
+  }
+
+  /* встречная строка чуть медленнее и со сдвигом фазы, чипы не встают в колонку */
+  .bento-marq--rev .bento-run {
+    animation-duration: 36s;
+    animation-direction: reverse;
+    margin-left: -56px;
+  }
+
+  .bento-rows:active .bento-run { animation-play-state: paused; }
+
+  .bento-set { display: flex; gap: 14px; padding-right: 14px; }
+
+  .bento-set .bento-cell { flex: none; }
+
+
+  /* 04b Роли */
+  /* заголовок по левому краю, показана строка активной карточки;
+     карточки листаются каруселью, активность ведёт js по прокрутке;
+     блок прижат к низу с отступом карточек преимуществ */
+  .roles {
+    align-items: flex-start;
+    justify-content: flex-end;
+    text-align: left;
+    padding-bottom: calc(16px + max(8px, env(safe-area-inset-bottom, 0px)));
+  }
+
+  /* многоточие-продолжение вместо точки */
+  .roles .st-line:first-child .st-word:last-child::after { content: '…'; }
+
+  /* адресат отдельной строкой «Владельцу» сверху, «рост прибыли…» ниже */
+  .roles .st-word:first-child { display: block; }
+
+  .roles .statement-title { position: relative; width: 100%; }
+
+  .roles .st-line { transition: opacity 0.4s ease; }
+
+  .roles .st-line + .st-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+  }
+
+  .roles.roles-act-1 .st-line:first-child { opacity: 0; }
+  .roles.roles-act-1 .st-line + .st-line { opacity: 1; }
+
+  .roles-cols {
+    display: flex;
+    gap: 12px;
+    width: auto;
+    align-self: stretch;
+    margin: 40px -24px 0;
+    padding: 0 24px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .roles-cols::-webkit-scrollbar { display: none; }
+
+  /* карточка на всю ширину минус край следующей, как в ленте преимуществ;
+     кегли по шкале практики, мелкие 14 юзер забраковал */
+  .roles-card { flex: 0 0 min(calc(100vw - 68px), 420px); border-radius: 16px; padding: 18px 20px; }
+  .roles-card-who { font-size: 15px; line-height: 20px; margin-bottom: 8px; }
+  .roles-card p { font-size: 16px; line-height: 25px; }
+
+  /* серый статичный текст-подтверждение под карточками, при свайпе не меняется */
+  .roles-detail { display: block; width: 100%; margin-top: 40px; }
+
+  .roles-detail p {
+    font-size: 16px;
+    line-height: 25px;
+    color: var(--ink-3);
+    text-wrap: pretty;
+  }
 
   /* 05 / 06 Футер */
   /* env(safe-area-inset-bottom) не ноль только в webview с принудительным viewport-fit=cover */
@@ -813,7 +1252,28 @@ a { color: inherit; }
     margin-top: 0;
   }
 
-  .footer-cta { padding: 14px 24px; font-size: 15px; }
+  .footer-cta { position: relative; padding: 14px 24px; font-size: 15px; }
+
+  /* тёплый ореол под кнопкой, дышит фирменным оранжевым */
+  .footer-cta::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 70%;
+    width: 260px;
+    height: 130px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      closest-side,
+      rgba(250, 140, 40, 0.95),
+      rgba(252, 169, 86, 0.55) 52%,
+      rgba(252, 169, 86, 0)
+    );
+    filter: blur(13px);
+    z-index: -1;
+    pointer-events: none;
+    animation: cta-glow 3.4s ease-in-out infinite;
+  }
 
   .footer-col-how { grid-column: 1 / -1; grid-row: 1; }
   .footer-col-contacts { grid-column: 1; grid-row: 2; }
@@ -833,7 +1293,7 @@ a { color: inherit; }
     height: 250px;
   }
 
-  /* зеркальная волна за полупрозрачной нижней панелью браузера: фикс-слой ниже вьюпорта */
+  /* зеркальная волна за полупрозрачной нижней панелью браузера фикс-слой ниже вьюпорта */
   .footer-under {
     display: block;
     position: fixed;
@@ -860,15 +1320,31 @@ a { color: inherit; }
   }
 }
 
+
+/* дыхание ореола футерной кнопки */
+@keyframes cta-glow {
+  0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.16); }
+}
+
+/* при отключённых анимациях встречные строки складываются в перенос, дубль скрыт */
+@media (prefers-reduced-motion: reduce) and (max-width: 860px) {
+  .bento-rows { margin: 0; }
+  .bento-marq { mask-image: none; -webkit-mask-image: none; }
+  .bento-run { width: auto; }
+  .bento-set { flex-wrap: wrap; padding-right: 0; }
+  .bento-set + .bento-set { display: none; }
+}
+
 /* ============ Короткий мобильный вьюпорт ============ */
-/* классы ставит js по замороженной высоте: media по высоте дёргалась бы от клавиатуры.
-   is-compact это ширина до 860 и высота до 740: тикер прячется, плашке футера вся высота */
+/* классы ставит js по замороженной высоте media по высоте дёргалась бы от клавиатуры,
+   is-compact это ширина до 860 и высота до 740 тикер прячется, плашке футера вся высота */
 :root.is-compact .hero-grid { padding-top: 28px; }
 
 :root.is-compact .ticker { display: none; }
 
 /* плашка на весь экран, волна фоном под текстами */
-/* z-index auto обязателен: стек плашки положил бы волну поверх текстов */
+/* z-index auto обязателен стек плашки положил бы волну поверх текстов */
 :root.is-compact .footer-sheet {
   height: 100%;
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
@@ -879,6 +1355,13 @@ a { color: inherit; }
 
 :root.is-compact .footer-inner { position: relative; z-index: 2; }
 
+/* низкий экран бенто ужимается, иначе заголовок уходит под шапку */
+:root.is-compact .services-title { font-size: 26px; line-height: 28px; margin-bottom: 24px; }
+
+:root.is-compact .bento-cell { padding: 12px 16px; }
+
+:root.is-compact .bento-cell b { font-size: 15px; }
+
 /* рука в полный рост только в портрете, в альбомной ориентации остаётся базовая малая */
 /* корпус телефона в фото на 12% ниже кромки, якорь 94 ставит его верх в 20px под заголовком */
 :root.is-compact.is-portrait .hero-hand {
@@ -887,7 +1370,7 @@ a { color: inherit; }
   height: 580px;
 }
 
-/* ============ Отладка: ?debug=1 ============ */
+/* ============ Отладка ?debug=1 ============ */
 .debug-hud {
   position: fixed;
   top: 4px;

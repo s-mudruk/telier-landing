@@ -66,60 +66,102 @@ const METRICS = [
 ]
 
 /* сцены продукта, описания держать в две строки иначе мокап прыгает */
+/* порядок согласован язык предпоследним, чат последним */
 const SCENES = [
   {
     title: 'Единый вход',
     desc: 'Гость регистрируется один раз, и все сервисы отеля уже внутри.',
     img: asset('/assets/mock-onboarding.png'),
+    webp: asset('/assets/mock-onboarding.webp'),
   },
   {
     title: 'Точный заказ в пару касаний',
     desc: 'Еда, спа и уборка со счётом на номер, без карты и ожидания.',
     img: asset('/assets/mock-massage.png'),
-  },
-  {
-    title: 'Персональный чат 24/7',
-    desc: 'Любой вопрос решается в переписке, ресепшн разгружен.',
-    img: asset('/assets/mock-chat.png'),
+    webp: asset('/assets/mock-massage.webp'),
   },
   {
     title: 'Говорит на языке гостя',
     desc: 'Интерфейс настраивается под нужный язык.',
     img: asset('/assets/mock-language.png'),
+    webp: asset('/assets/mock-language.webp'),
+  },
+  {
+    title: 'Персональный чат 24/7',
+    desc: 'Любой вопрос решается в переписке, ресепшн разгружен.',
+    img: asset('/assets/mock-chat.png'),
+    webp: asset('/assets/mock-chat.webp'),
   },
 ]
 
-/* карточки ленты, описания держать в две строки */
+/* четыре карточки со слайда преимуществ, описания из макета, ill это базовое
+   имя файла в assets/illustrations, у интеграции иллюстрации пока нет */
 const USP = [
   {
-    t: 'Не чат-бот и не виджет',
-    d: 'Приложение остаётся у гостя после выезда и приводит его снова.',
+    ill: 'usp-suitcase',
+    t: 'Полноценное мобильное приложение',
+    d: 'Не чат-бот и не виджет. Нативное приложение с безупречным UX остаётся у гостя на телефоне и возвращает его в ваш отель снова.',
   },
   {
-    t: 'Встаёт в ваши системы',
-    d: 'PMS, Rkeeper, iiko и умные замки подхватывают заказы сами.',
+    ill: 'usp-key',
+    t: 'Интеграция с системами отеля',
+    d: 'Бесшовное подключение к PMS, Rkeeper, iiko, умным замкам и сайту. Данные синхронизируются сами, без дополнительных настроек.',
   },
   {
-    t: 'Ноль затрат на старт',
-    d: 'Интеграцию, обучение смены и промо берём на себя.',
+    ill: 'usp-gift',
+    t: 'Бесплатное внедрение и поддержка',
+    d: 'Интеграция, обучение персонала и промо-материалы за наш счёт. Вы не несёте затрат на запуск и работу сервиса.',
   },
   {
-    t: 'Оплата с результата',
-    d: 'Только процент с заказов, которые сами вам и принесли.',
-  },
-  {
-    t: 'Шахматка заказов',
-    d: 'Кухня, спа и хаускипинг видят одну доску заказов.',
-  },
-  {
-    t: 'Аналитика без выгрузок',
-    d: 'Средний чек, выручка допуслуг и NPS в одном окне.',
-  },
-  {
-    t: 'Push в нужный момент',
-    d: 'Спа на 16:00 или ужин к заезду приходят вовремя.',
+    ill: 'usp-pie',
+    t: 'Оплата только',
+    /* t2 уходит на вторую строку принудительно, но только на мобилке */
+    t2: 'с транзакций',
+    d: 'Без абонентской платы и скрытых платежей. Только 5% от заказов через приложение. Мы заинтересованы в вашем доходе.',
   },
 ]
+
+/* ячейки бенто из макета, сервисы гостя по важности сценария;
+   icon это имя файла в assets/icons, отельная ячейка тёмная */
+const BENTO = [
+  { t: 'Заказ еды', icon: 'food', mod: 'accent' },
+  { t: 'Пополнение минибара', icon: 'minibar' },
+  { t: 'Спа и массаж', icon: 'spa' },
+  { t: 'Трансфер', icon: 'transfer' },
+  { t: 'Уборка и стирка', icon: 'laundry' },
+  { t: 'Бронирование стола', icon: 'table' },
+  { t: 'Открытие номера', icon: 'key' },
+  { t: 'Чат с персоналом 24/7', icon: 'chat' },
+  { t: 'Профиль и история', icon: 'profile' },
+  { t: 'Личные предложения', icon: 'offer' },
+  { t: 'Аналитика по гостям, push и шахматка заказов', icon: 'analytics', mod: 'hotel' },
+]
+
+/* отельные пункты третьей полоски, из страницы 5 макета, чипы тёмные */
+const HOTEL_POINTS = [
+  { t: 'Аналитика по гостям', icon: 'analytics', mod: 'hotel' },
+  { t: 'Push-уведомления', icon: 'push', mod: 'hotel' },
+  { t: 'Шахматка заказов', icon: 'board', mod: 'hotel' },
+]
+
+/* разворот из макета владельцу прибыль, управляющему спокойствие */
+const ROLES = {
+  /* хвост первой строки ставит css на десктопе точка, на мобилке многоточие */
+  lines: [
+    { text: 'Владельцу рост прибыли' },
+    { text: 'Управляющему спокойствие.' },
+  ],
+  cols: [
+    {
+      who: 'Владельцу',
+      text: 'Прозрачная аналитика по допуслугам, среднему чеку и NPS.',
+      textMob: 'Прозрачная аналитика допуслуг, среднего чека и NPS.',
+    },
+    { who: 'Управляющему', text: 'Разгруженный ресепшн, довольные гости и лёгкое внедрение.' },
+  ],
+  /* подтверждение из макета про обоих деньги на столе и вход без риска */
+  more: 'Без Тельера отель оставляет деньги на столе. Мы уверены в этом настолько, что даём бесплатный вход и берём оплату только с результата.',
+}
 
 const Icon = ({ name }) => {
   const shapes = {
@@ -211,7 +253,7 @@ const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }
     toastTimer.current = setTimeout(() => setToast(null), 4000)
   }, [])
 
-  /* открытая клавиатура перекрывает плашку: подводим её к верхнему краю
+  /* открытая клавиатура перекрывает плашку подводим её к верхнему краю
      клавиатуры, после закрытия перевыравнивание скролла вернёт остановку */
   const keyboardTimers = useRef([])
 
@@ -231,7 +273,7 @@ const PhoneForm = forwardRef(function PhoneForm({ cta, onCtaClick, ctaDisabled }
 
   const onFocusAlign = useCallback(() => {
     keyboardTimers.current.forEach(clearTimeout)
-    /* два прохода: клавиатура выезжает не мгновенно */
+    /* два прохода клавиатура выезжает не мгновенно */
     keyboardTimers.current = [350, 700].map((ms) => setTimeout(alignToKeyboard, ms))
   }, [alignToKeyboard])
 
@@ -362,7 +404,11 @@ function Hero({ heroRef, phoneFormRef, onDemoClick }) {
           <ActionTicker />
         </div>
       </div>
-      <img className="hero-hand" src={asset('/assets/hero-hand.png')} alt="Приложение Тельер в руке гостя" />
+      {/* webp в восемь раз легче, png остаётся фолбэком для старых браузеров */}
+      <picture>
+        <source type="image/webp" srcSet={asset('/assets/hero-hand.webp')} />
+        <img className="hero-hand" src={asset('/assets/hero-hand.png')} alt="Приложение Тельер в руке гостя" />
+      </picture>
       <div className="hero-lead">
         <PhoneForm ref={phoneFormRef} cta="Заказать демо" onCtaClick={onDemoClick} />
       </div>
@@ -396,7 +442,7 @@ function Numbers() {
   )
 }
 
-/* ============ Продукт: sticky-сцена ============ */
+/* ============ Продукт sticky-сцена ============ */
 /* кривые в scene-timing.js, здесь только раскладка значений по DOM */
 function ProductSticky() {
   const trackRef = useRef(null)
@@ -458,14 +504,128 @@ function ProductSticky() {
           </div>
           <div className="stage-shots">
             {SCENES.map((s, d) => (
-              <img
-                key={s.title}
-                ref={(el) => (shotRefs.current[d] = el)}
-                src={s.img}
-                alt={s.title}
-              />
+              <picture key={s.title}>
+                <source type="image/webp" srcSet={s.webp} />
+                <img ref={(el) => (shotRefs.current[d] = el)} src={s.img} alt={s.title} />
+              </picture>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ============ Манифест ============ */
+/* целевые сообщения из макета барьер заказа, статус против qr-страниц,
+   владельцу прибыль и управляющему спокойствие, пока тестируем первое */
+const STATEMENT = {
+  lines: [
+    { text: 'Гость не звонит на ресепшн,', muted: false },
+    { text: 'он просто не заказывает', muted: false },
+  ],
+  note: 'Тельер убирает этот барьер, заказ занимает пару касаний прямо из номера.',
+}
+
+/* строки открываются из-под маски слово за словом, обратный скролл прячет всё разом;
+   children встают между заголовком и подписью, на этом же ревиле построен экран ролей */
+function Statement({ lines = STATEMENT.lines, note = STATEMENT.note, className = '', children }) {
+  const [ref, inView] = useInView(0.5)
+  let n = 0
+  return (
+    <section
+      ref={ref}
+      className={`panel statement${className ? ` ${className}` : ''}${inView ? ' in-view' : ''}`}
+    >
+      <h2 className="statement-title">
+        {lines.map((line) => (
+          <span className={`st-line${line.muted ? ' st-muted' : ''}`} key={line.text}>
+            {line.text.split(' ').map((w, wi) => (
+              <span className="st-word" style={{ '--d': n++ }} key={wi}>
+                {w}
+              </span>
+            ))}
+          </span>
+        ))}
+      </h2>
+      {children}
+      {note && (
+        <p className="statement-note" style={{ '--d': n }}>
+          {typo(note)}
+        </p>
+      )}
+    </section>
+  )
+}
+
+/* ============ Практика ============ */
+/* мировые цифры со страницы 7 крупно, проблема со страницы 3 одной строкой */
+function Practice() {
+  const [ref, inView] = useInView(0.4)
+  return (
+    <section ref={ref} className={`panel practice${inView ? ' in-view' : ''}`}>
+      <div className="container">
+        <p className="practice-label">{typo('Мировая практика говорит сама за себя')}</p>
+        <h2 className="practice-claim">
+          {typo('Консьерж в приложении приносит отелю')}{' '}
+          <span className="practice-accent">{typo('до 25%')}</span>{' '}
+          {typo('к продажам допуслуг, растит NPS и возврат гостей')}
+        </h2>
+        <p className="practice-support">
+          {typo('Гости отелей 4 и 5 звёзд готовы заказывать допуслуги, но')}{' '}
+          <span className="nw">звонок на ресепшн</span>{' '}
+          {typo('или QR-страница создают барьер, и отель недополучает до четверти возможной выручки. Тельер построен на мировой практике и адаптирован под российские реалии без компромиссов в качестве.')}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+/* ============ Сервисы бенто ============ */
+/* десктоп сетка из макета, еда тёплым акцентом, отельная ячейка тёмная;
+   мобилка две встречные бесконечные строки чипов и отельная плашка */
+function BentoCell({ cell, i = 0, hidden = false }) {
+  return (
+    <div
+      className={`bento-cell${cell.mod ? ` bento-cell--${cell.mod}` : ''}`}
+      style={{ '--i': i }}
+      aria-hidden={hidden || undefined}
+    >
+      {/* без lazy ленивые иконки подгружались в момент входа на экран и дёргали ленты */}
+      {cell.icon && <img className="bento-icon" src={asset(`/assets/icons/${cell.icon}.svg`)} alt="" />}
+      <b>{typo(cell.t, false)}</b>
+    </div>
+  )
+}
+
+function Services() {
+  const [ref, inView] = useInView(0.4)
+  const guests = BENTO.filter((c) => c.mod !== 'hotel')
+  return (
+    <section ref={ref} className={`panel services${inView ? ' in-view' : ''}`}>
+      <div className="container">
+        <h2 className="services-title">{typo('Всё, что нужно гостю, в одном приложении')}</h2>
+        <div className="bento">
+          {BENTO.map((c, i) => (
+            <BentoCell cell={c} i={i} key={c.t} />
+          ))}
+        </div>
+        <div className="bento-rows">
+          {/* третья полоска, отельные пункты, направления чередуются */}
+          {[guests.slice(0, 5), guests.slice(5), HOTEL_POINTS].map((row, r) => (
+            <div className={`bento-marq${r % 2 ? ' bento-marq--rev' : ''}`} key={r}>
+              <div className="bento-run">
+                {/* две копии строки дают бесшовный цикл, дубль скрыт от читалок */}
+                {[false, true].map((hidden) => (
+                  <div className="bento-set" key={String(hidden)}>
+                    {row.map((c) => (
+                      <BentoCell cell={c} hidden={hidden} key={c.t} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -489,16 +649,82 @@ function Hotel() {
         <div className="usp-row" ref={railRef}>
           {USP.map((u, i) => (
             <div className="usp-col" key={u.t} style={{ '--i': i }}>
-              <div className="usp-media" aria-hidden="true" />
-              <div className="usp-text">
-                <b>{typo(u.t)}</b>
-                <p>{typo(u.d, false)}</p>
+              <div className="usp-card">
+                {u.ill && (
+                  <picture className="usp-ill">
+                    <source type="image/webp" srcSet={asset(`/assets/illustrations/${u.ill}.webp`)} />
+                    <img src={asset(`/assets/illustrations/${u.ill}.png`)} alt="" loading="lazy" />
+                  </picture>
+                )}
+                <div className="usp-text">
+                  <b>
+                    {typo(u.t)}
+                    {u.t2 && (
+                      <>
+                        <br className="only-mob" /> {typo(u.t2)}
+                      </>
+                    )}
+                  </b>
+                  <p>{typo(u.d, false)}</p>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
     </section>
+  )
+}
+
+/* ============ Роли ============ */
+/* разворот из макета на сплит-ревиле манифеста, под заголовком две карточки
+   сути, на мобилке карточки листаются каруселью, и активной карточке
+   отвечает своя строка заголовка */
+function Roles() {
+  const railRef = useRef(null)
+  const [act, setAct] = useState(0)
+
+  useEffect(() => {
+    const el = railRef.current
+    if (!el) return
+    const detach = attachRailSnap(el)
+    /* активная карточка по середине запаса прокрутки, карточек две */
+    const onScroll = () => {
+      const span = el.scrollWidth - el.clientWidth
+      if (span > 8) setAct(el.scrollLeft > span / 2 ? 1 : 0)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      detach()
+      el.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
+  return (
+    <Statement className={`roles roles-act-${act}`} lines={ROLES.lines} note={null}>
+      <div className="roles-cols" ref={railRef}>
+        {ROLES.cols.map((c, i) => (
+          <div className="roles-card" style={{ '--i': i }} key={c.who}>
+            <div className="roles-card-who">{c.who}</div>
+            {/* textMob подменяет формулировку только на мобилке */}
+            <p>
+              {c.textMob ? (
+                <>
+                  <span className="only-desk">{typo(c.text)}</span>
+                  <span className="only-mob">{typo(c.textMob)}</span>
+                </>
+              ) : (
+                typo(c.text)
+              )}
+            </p>
+          </div>
+        ))}
+      </div>
+      {/* статичное подтверждение под каруселью, живёт только на мобилке */}
+      <div className="roles-detail">
+        <p>{typo(ROLES.more)}</p>
+      </div>
+    </Statement>
   )
 }
 
@@ -530,7 +756,7 @@ function Footer({ footerRef, onDemoClick }) {
       const mob = window.innerWidth <= 860
       const vh = window.innerHeight
 
-      /* десктоп: радиус едет с 62 до 24, мобилка всегда 32 */
+      /* десктоп радиус едет с 62 до 24, мобилка всегда 32 */
       const rp = clamp(sheet.getBoundingClientRect().top / (vh * 0.34), 0, 1)
       const r = mob ? 32 : 24 + 38 * rp
       const key = `${mob}|${rp.toFixed(3)}`
@@ -626,7 +852,7 @@ export default function App() {
   const scrollerRef = useRef(null)
   useSmoothScroll(scrollerRef)
 
-  /* высота секций заморожена в px: обновляется на реальный resize,
+  /* высота секций заморожена в px обновляется на реальный resize,
      клавиатура (фокус в поле) раскладку не меняет */
   useEffect(() => {
     const root = document.documentElement
@@ -692,14 +918,20 @@ export default function App() {
       </header>
       <main className="snap" ref={scrollerRef}>
         <div className="snap-inner">
+          {/* повествование обещание, цифры, проблема, доказательство,
+              продукт в действии, всё внутри, условия, итог по ролям, CTA */}
           <Hero heroRef={heroRef} phoneFormRef={phoneFormRef} onDemoClick={() => handleDemoClick('hero')} />
           <Numbers />
+          <Statement />
+          <Practice />
           <ProductSticky />
+          <Services />
           <Hotel />
+          <Roles />
           <Footer footerRef={footerRef} onDemoClick={() => handleDemoClick('scroll')} />
         </div>
       </main>
-      {/* волна за полупрозрачной нижней панелью браузера: фикс-слой ниже вьюпорта */}
+      {/* волна за полупрозрачной нижней панелью браузера фикс-слой ниже вьюпорта */}
       <div className={`footer-under${footerSeen ? ' show' : ''}`} aria-hidden="true">
         <img src={asset('/assets/footer-wave.png')} alt="" />
       </div>
